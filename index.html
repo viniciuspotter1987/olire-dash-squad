@@ -55,6 +55,10 @@ tr.row-subtotal-n{background:var(--nexus-light);font-weight:500}
 tr.row-subtotal-v{background:var(--vital-light);font-weight:500}
 tr.row-subtotal-id{background:var(--id-light);font-weight:500}
 tr.linha-sep td{background:var(--bg2);font-size:11px;font-weight:500;color:var(--txt2);padding:5px 8px;border-top:1px solid var(--border);border-bottom:0.5px solid var(--border)}
+tr.detail-row{display:none;background:var(--bg2)}
+tr.detail-row.open{display:table-row}
+tr.detail-row td{padding:5px 8px 5px 24px;font-size:12px;color:var(--txt2)}
+tr.detail-hdr td{padding:5px 8px 5px 24px;font-size:11px;font-weight:500;background:var(--bg2)}
 td.pct-n{color:var(--nexus);font-weight:500}
 td.pct-v{color:var(--vital);font-weight:500}
 td.pct-id{color:var(--id);font-weight:500}
@@ -171,10 +175,7 @@ td.zero{color:var(--txt3);font-style:italic}
   <div class="metrics" id="ugn-metrics"></div>
   <div class="card">
     <div class="card-title"><i class="ti ti-list"></i> Setores por linha — clique para expandir CNPJs</div>
-    <div class="tw"><table id="ugn-table">
-      <thead><tr><th></th><th>Setor</th><th>Linha</th><th>C04 dist.</th><th>C04 conv.</th><th>% C04</th><th>C05 dist.</th><th>C05 conv.</th><th>% C05</th></tr></thead>
-      <tbody id="ugn-tbody"></tbody>
-    </table></div>
+    <div class="tw" id="ugn-table-wrap"></div>
   </div>
 </div>
 <div id="page-pdv-ugn" class="page">
@@ -340,7 +341,7 @@ function renderUGN(ugn) {
   if (!u) return;
   // Metrics
   const nc = u.nexus_c05conv, vc = u.vital_c05conv;
-  const nd = u.nexus_c05dist || '—', vd = u.vital_c05dist || '—';
+  const nd = u.nexus_c05dist, vd = u.vital_c05dist;
   const np = nd ? (nc/nd*100).toFixed(1).replace('.',',')+'%' : '—';
   const vp = vd ? (vc/vd*100).toFixed(1).replace('.',',')+'%' : '—';
   document.getElementById('ugn-metrics').innerHTML = `
@@ -349,74 +350,80 @@ function renderUGN(ugn) {
     <div class="metric"><div class="metric-label" style="color:var(--vital)">Vital C05</div><div class="metric-value" style="color:var(--vital)">${fmtBr(u.vital_c05dist)}</div><div class="metric-sub">${fmtBr(vc)} conv. · ${vp}</div></div>
     <div class="metric"><div class="metric-label" style="color:var(--id)">Identidade C05</div><div class="metric-value" style="color:var(--id)">${fmtBr(u.id_c05dist)}</div><div class="metric-sub">0 conv. · 0,0%</div></div>
   `;
-  // Table
-  let html = '';
+
+  // Build table rows — use only <tr> elements (no nested tbody)
+  let rows = '';
   let sid = 0;
-  const addSetor = (s, linha, cls, pcls, badgeCls) => {
+
+  const addSetor = (s, linha, rowCls, pctCls, badgeCls) => {
     sid++;
-    const key = `s_${ugn.replace(/\s/g,'_')}_${sid}`;
-    const c04p = s.c04d ? (s.c04c/s.c04d*100).toFixed(1).replace('.',',')+'%' : '<span class="zero">—</span>';
-    const c05p = s.c05d ? (s.c05c/s.c05d*100).toFixed(1).replace('.',',')+'%' : '<span class="zero">—</span>';
-    const c04dStr = s.c04d ? fmtBr(s.c04d) : '<span class="zero">—</span>';
+    const key = `s${sid}`;
+    const c04p = (s.c04d && linha!=='IDENTIDADE') ? (s.c04c/s.c04d*100).toFixed(1).replace('.',',')+' %' : '—';
+    const c05p = s.c05d ? (s.c05c/s.c05d*100).toFixed(1).replace('.',',')+' %' : '—';
+    const c04dStr = (s.c04d && linha!=='IDENTIDADE') ? fmtBr(s.c04d) : '<span class="zero">—</span>';
+    const c04cStr = (linha!=='IDENTIDADE') ? fmtBr(s.c04c) : '<span class="zero">—</span>';
     const c05dStr = s.c05d ? fmtBr(s.c05d) : '<span class="zero">—</span>';
-    const c04cStr = linha==='IDENTIDADE' ? '<span class="zero">—</span>' : fmtBr(s.c04c);
-    const c05cStr = fmtBr(s.c05c);
-    html += `<tr class="setor-row ${cls}" onclick="toggleSetor('${key}')">
+    const c05cStr = (linha!=='IDENTIDADE') ? fmtBr(s.c05c) : '<span class="zero">0</span>';
+
+    rows += `<tr class="setor-row ${rowCls}" onclick="toggleSetor('${key}')">
       <td><i class="ti ti-chevron-right" id="ico-${key}" style="font-size:12px;color:var(--txt3)"></i></td>
       <td style="font-size:12px">${s.cd} · ${s.nome}</td>
       <td><span class="badge ${badgeCls}">${linha}</span></td>
-      <td>${c04dStr}</td>
-      <td>${linha==='IDENTIDADE'?'<span class="zero">—</span>':fmtBr(s.c04c)}</td>
-      <td class="${pcls}">${linha==='IDENTIDADE'?'<span class="zero">—</span>':c04p}</td>
-      <td>${c05dStr}</td>
-      <td>${c05cStr}</td>
-      <td class="${pcls}">${linha==='IDENTIDADE'?'<span class="zero">0,0%</span>':c05p}</td>
+      <td>${c04dStr}</td><td>${c04cStr}</td>
+      <td class="${pctCls}">${linha!=='IDENTIDADE'?c04p:'<span class="zero">—</span>'}</td>
+      <td>${c05dStr}</td><td>${c05cStr}</td>
+      <td class="${pctCls}">${linha==='IDENTIDADE'?'<span class="zero">0,0%</span>':c05p}</td>
     </tr>`;
-    html += `<tbody id="${key}" class="setor-detail">`;
+
+    // Detail rows (hidden by default, toggled by JS)
     if (linha === 'IDENTIDADE') {
-      html += `<tr><td></td><td colspan="8" style="color:var(--id);font-size:11px"><i class="ti ti-info-circle"></i> Identidade: cupons distribuídos no C05 · 0 conversões registradas</td></tr>`;
+      rows += `<tr class="detail-row detail-hdr" data-key="${key}"><td></td><td colspan="8" style="color:var(--id);font-size:11px"><i class="ti ti-info-circle"></i> Identidade: cupons distribuídos no C05 · 0 conversões registradas</td></tr>`;
     } else if (s.pdvs && s.pdvs.length) {
-      html += `<tr><td></td><td colspan="2" style="color:var(--ems-blue-mid);font-weight:500;font-size:11px">CNPJ</td><td colspan="3">Nome PDV</td><td colspan="3" style="font-weight:500">Caixas C04</td></tr>`;
+      rows += `<tr class="detail-row detail-hdr" data-key="${key}"><td></td><td colspan="2" style="color:var(--ems-blue-mid);font-weight:500;font-size:11px">CNPJ</td><td colspan="3">Nome PDV</td><td colspan="3" style="font-weight:500">Caixas C04</td></tr>`;
       s.pdvs.forEach(p => {
-        html += `<tr><td></td><td colspan="2">${p.cnpj}</td><td colspan="3">${p.nome}</td><td colspan="3">${fmtBr(p.cx)}</td></tr>`;
+        rows += `<tr class="detail-row" data-key="${key}"><td></td><td colspan="2" style="font-size:11px">${p.cnpj}</td><td colspan="3">${p.nome}</td><td colspan="3">${fmtBr(p.cx)}</td></tr>`;
       });
     } else {
-      html += `<tr><td></td><td colspan="8" style="color:var(--txt3);font-size:11px">Sem dados de PDV disponíveis</td></tr>`;
+      rows += `<tr class="detail-row" data-key="${key}"><td></td><td colspan="8" style="color:var(--txt3);font-size:11px">Sem dados de PDV disponíveis</td></tr>`;
     }
-    html += `</tbody>`;
   };
 
-  // NEXUS block
-  html += `<tr class="linha-sep"><td colspan="9"><span class="badge b-nexus">NEXUS</span> — ${u.nexus.length} setores · ${fmtBr(u.nexus_c04conv)} C04 conv. · ${fmtBr(u.nexus_c05conv)} C05 conv.</td></tr>`;
-  u.nexus.forEach(s => addSetor(s, 'NEXUS', 'row-nexus', 'pct-n', 'b-nexus'));
-  // NEXUS subtotal
-  const nxC04d = u.nexus.reduce((a,s)=>a+s.c04d,0), nxC04c = u.nexus_c04conv, nxC05d = u.nexus.reduce((a,s)=>a+s.c05d,0), nxC05c = u.nexus_c05conv;
-  html += `<tr class="row-subtotal-n"><td></td><td colspan="2"><strong>Subtotal NEXUS</strong></td><td>${fmtBr(nxC04d)}</td><td>${fmtBr(nxC04c)}</td><td class="pct-n">${nxC04d?(nxC04c/nxC04d*100).toFixed(1).replace('.',',')+"%":"—"}</td><td>${fmtBr(nxC05d)||'—'}</td><td>${fmtBr(nxC05c)}</td><td class="pct-n">—</td></tr>`;
+  // NEXUS
+  rows += `<tr class="linha-sep"><td colspan="9"><span class="badge b-nexus">NEXUS</span> — ${u.nexus.length} setores · ${fmtBr(u.nexus_c04conv)} C04 conv. · ${fmtBr(u.nexus_c05conv)} C05 conv.</td></tr>`;
+  u.nexus.forEach(s => addSetor(s,'NEXUS','row-nexus','pct-n','b-nexus'));
+  const nxC04d=u.nexus.reduce((a,s)=>a+s.c04d,0), nxC05d=u.nexus.reduce((a,s)=>a+s.c05d,0);
+  rows += `<tr class="row-subtotal-n"><td></td><td colspan="2"><strong>Subtotal NEXUS</strong></td><td>${fmtBr(nxC04d)}</td><td>${fmtBr(u.nexus_c04conv)}</td><td class="pct-n">${nxC04d?(u.nexus_c04conv/nxC04d*100).toFixed(1).replace('.',',')+'%':'—'}</td><td>${nxC05d?fmtBr(nxC05d):'—'}</td><td>${fmtBr(u.nexus_c05conv)}</td><td class="pct-n">—</td></tr>`;
 
-  // VITAL block
-  html += `<tr class="linha-sep"><td colspan="9"><span class="badge b-vital">VITAL</span> — ${u.vital.length} setores · ${fmtBr(u.vital_c04conv)} C04 conv. · ${fmtBr(u.vital_c05conv)} C05 conv.</td></tr>`;
-  u.vital.forEach(s => addSetor(s, 'VITAL', 'row-vital', 'pct-v', 'b-vital'));
-  const vtC04d = u.vital.reduce((a,s)=>a+s.c04d,0), vtC04c = u.vital_c04conv, vtC05d = u.vital.reduce((a,s)=>a+s.c05d,0), vtC05c = u.vital_c05conv;
-  html += `<tr class="row-subtotal-v"><td></td><td colspan="2"><strong>Subtotal VITAL</strong></td><td>${fmtBr(vtC04d)}</td><td>${fmtBr(vtC04c)}</td><td class="pct-v">${vtC04d?(vtC04c/vtC04d*100).toFixed(1).replace('.',',')+"%":"—"}</td><td>${fmtBr(vtC05d)||'—'}</td><td>${fmtBr(vtC05c)}</td><td class="pct-v">—</td></tr>`;
+  // VITAL
+  rows += `<tr class="linha-sep"><td colspan="9"><span class="badge b-vital">VITAL</span> — ${u.vital.length} setores · ${fmtBr(u.vital_c04conv)} C04 conv. · ${fmtBr(u.vital_c05conv)} C05 conv.</td></tr>`;
+  u.vital.forEach(s => addSetor(s,'VITAL','row-vital','pct-v','b-vital'));
+  const vtC04d=u.vital.reduce((a,s)=>a+s.c04d,0), vtC05d=u.vital.reduce((a,s)=>a+s.c05d,0);
+  rows += `<tr class="row-subtotal-v"><td></td><td colspan="2"><strong>Subtotal VITAL</strong></td><td>${fmtBr(vtC04d)}</td><td>${fmtBr(u.vital_c04conv)}</td><td class="pct-v">${vtC04d?(u.vital_c04conv/vtC04d*100).toFixed(1).replace('.',',')+'%':'—'}</td><td>${vtC05d?fmtBr(vtC05d):'—'}</td><td>${fmtBr(u.vital_c05conv)}</td><td class="pct-v">—</td></tr>`;
 
-  // IDENTIDADE block
-  html += `<tr class="linha-sep"><td colspan="9"><span class="badge b-id">IDENTIDADE</span> — ${u.identidade.length} setores · 0 conv. registradas</td></tr>`;
-  u.identidade.forEach(s => addSetor(s, 'IDENTIDADE', 'row-id', 'pct-id', 'b-id'));
-  const idC05d = u.identidade.reduce((a,s)=>a+s.c05d,0);
-  html += `<tr class="row-subtotal-id"><td></td><td colspan="2"><strong>Subtotal IDENTIDADE</strong></td><td class="zero">—</td><td class="zero">—</td><td class="zero">—</td><td>${fmtBr(idC05d)||'—'}</td><td class="zero">0</td><td class="zero">0,0%</td></tr>`;
+  // IDENTIDADE
+  rows += `<tr class="linha-sep"><td colspan="9"><span class="badge b-id">IDENTIDADE</span> — ${u.identidade.length} setores · 0 conv. registradas</td></tr>`;
+  u.identidade.forEach(s => addSetor(s,'IDENTIDADE','row-id','pct-id','b-id'));
+  const idC05d=u.identidade.reduce((a,s)=>a+s.c05d,0);
+  rows += `<tr class="row-subtotal-id"><td></td><td colspan="2"><strong>Subtotal IDENTIDADE</strong></td><td class="zero">—</td><td class="zero">—</td><td class="zero">—</td><td>${idC05d?fmtBr(idC05d):'—'}</td><td class="zero">0</td><td class="zero">0,0%</td></tr>`;
 
   // Total UGN
-  html += `<tr class="row-total"><td></td><td colspan="2"><strong>TOTAL ${ugn}</strong></td><td>${fmtBr(u.c04dist)}</td><td>${fmtBr(u.c04conv)}</td><td class="pct-e">${(u.c04conv/u.c04dist*100).toFixed(1).replace('.',',')}%</td><td>${fmtBr(u.c05dist)}</td><td>${fmtBr(u.c05conv)}</td><td class="pct-e">${(u.c05conv/u.c05dist*100).toFixed(1).replace('.',',')}%</td></tr>`;
+  rows += `<tr class="row-total"><td></td><td colspan="2"><strong>TOTAL ${ugn}</strong></td><td>${fmtBr(u.c04dist)}</td><td>${fmtBr(u.c04conv)}</td><td class="pct-e">${(u.c04conv/u.c04dist*100).toFixed(1).replace('.',',')}%</td><td>${fmtBr(u.c05dist)}</td><td>${fmtBr(u.c05conv)}</td><td class="pct-e">${(u.c05conv/u.c05dist*100).toFixed(1).replace('.',',')}%</td></tr>`;
 
-  document.getElementById('ugn-tbody').innerHTML = html;
+  document.getElementById('ugn-table-wrap').innerHTML = `<table>
+    <thead><tr><th></th><th>Setor</th><th>Linha</th><th>C04 dist.</th><th>C04 conv.</th><th>% C04</th><th>C05 dist.</th><th>C05 conv.</th><th>% C05</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
 }
 
-function toggleSetor(id) {
-  const el = document.getElementById(id);
-  const ico = document.getElementById('ico-' + id);
-  const open = el.classList.toggle('open');
-  ico.className = 'ti ' + (open ? 'ti-chevron-down' : 'ti-chevron-right');
-  ico.style.fontSize = '12px'; ico.style.color = 'var(--txt3)';
+function toggleSetor(key) {
+  const details = document.querySelectorAll(`tr.detail-row[data-key="${key}"]`);
+  const ico = document.getElementById('ico-' + key);
+  const isOpen = [...details].some(r => r.classList.contains('open'));
+  details.forEach(r => r.classList.toggle('open', !isOpen));
+  if (ico) {
+    ico.className = 'ti ' + (!isOpen ? 'ti-chevron-down' : 'ti-chevron-right');
+    ico.style.fontSize = '12px'; ico.style.color = 'var(--txt3)';
+  }
 }
 
 // ── Page 3: PDV por Setor ────────────────────────────────────────────────────
@@ -431,36 +438,33 @@ function selectPDVUGN(btn, ugn) {
 function renderPDV(ugn) {
   const u = UGN_DATA[ugn];
   if (!u) return;
-  // All sectors with PDV data, sorted by c04conv desc
   const all = [...u.nexus, ...u.vital].filter(s => s.c04c > 0);
   all.sort((a,b) => b.c04c - a.c04c);
   const maxC = all.length ? all[0].c04c : 1;
-  let html = '';
+  let rows = '';
   let sid = 0;
   all.forEach(s => {
     sid++;
-    const key = `pdv_${ugn.replace(/\s/g,'_')}_${sid}`;
+    const key = `p${sid}`;
     const barW = Math.round(s.c04c/maxC*100);
-    html += `<tr class="setor-row" onclick="toggleSetor('${key}')">
+    rows += `<tr class="setor-row" onclick="toggleSetor('${key}')">
       <td><i class="ti ti-chevron-right" id="ico-${key}" style="font-size:12px;color:var(--txt3)"></i></td>
       <td style="font-size:12px">${s.cd} · ${s.nome}</td>
       <td>${fmtBr(s.c04c)}</td>
       <td>${s.pdvs ? s.pdvs.length : 0}</td>
       <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill bar-e" style="width:${barW}%"></div></div><span class="bar-pct">${s.c04c}</span></div></td>
     </tr>`;
-    html += `<tbody id="${key}" class="setor-detail">`;
     if (s.pdvs && s.pdvs.length) {
-      html += `<tr><td></td><td style="color:var(--ems-blue-mid);font-weight:500;font-size:11px">CNPJ</td><td colspan="2">Nome PDV</td><td style="font-weight:500">Cx C04</td></tr>`;
+      rows += `<tr class="detail-row detail-hdr" data-key="${key}"><td></td><td style="color:var(--ems-blue-mid);font-weight:500;font-size:11px">CNPJ</td><td colspan="2">Nome PDV</td><td style="font-weight:500">Cx C04</td></tr>`;
       s.pdvs.forEach(p => {
-        html += `<tr><td></td><td style="font-size:11px">${p.cnpj}</td><td colspan="2">${p.nome}</td><td>${p.cx}</td></tr>`;
+        rows += `<tr class="detail-row" data-key="${key}"><td></td><td style="font-size:11px">${p.cnpj}</td><td colspan="2">${p.nome}</td><td>${p.cx}</td></tr>`;
       });
     } else {
-      html += `<tr><td></td><td colspan="4" style="color:var(--txt3);font-size:11px">Sem dados de PDV disponíveis</td></tr>`;
+      rows += `<tr class="detail-row" data-key="${key}"><td></td><td colspan="4" style="color:var(--txt3);font-size:11px">Sem dados de PDV</td></tr>`;
     }
-    html += `</tbody>`;
   });
-  if (!html) html = `<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--txt3)">Sem conversões registradas nesta UGN</td></tr>`;
-  document.getElementById('pdv-tbody').innerHTML = html;
+  if (!rows) rows = `<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--txt3)">Sem conversões nesta UGN</td></tr>`;
+  document.getElementById('pdv-tbody').innerHTML = rows;
 }
 
 // ── Page 5: Evolução — Charts ────────────────────────────────────────────────
