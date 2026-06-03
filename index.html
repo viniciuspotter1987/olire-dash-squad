@@ -1,725 +1,503 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OLIRE DASH — VIDA MAIS LEVE (SPI)</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
-    <style>
-        :root {
-            --bg-primary: #f0f4f8;
-            --bg-card: #ffffff;
-            --bg-header: #003366;
-            --accent: #00a86b;
-            --accent2: #0066cc;
-            --text-primary: #1a202c;
-            --text-secondary: #718096;
-            --text-on-dark: #ffffff;
-            --border: #e2e8f0;
-            --positive: #00a86b;
-            --gap: 16px;
-            --radius: 10px;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.5;
-        }
-        .dashboard-container { max-width: 1400px; margin: 0 auto; padding: var(--gap); }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Olire &amp; Lirux — Vida Mais Leve 2026</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --eb:#003087;--em:#0055B3;--el:#E8F0FA;--eb2:#B8CEEE;
+  --n:#1B5E20;--nm:#388E3C;--nl:#E8F5E9;
+  --v:#B71C1C;--vm:#D32F2F;--vl:#FFEBEE;
+  --id:#7B5200;--im:#F9A825;--il:#FFF8E1;--ib:#FFE082;
+  --txt:var(--color-text-primary,#111);
+  --txt2:var(--color-text-secondary,#555);
+  --txt3:var(--color-text-tertiary,#888);
+  --bd:var(--color-border-tertiary,rgba(0,0,0,.1));
+  --bd2:var(--color-border-secondary,rgba(0,0,0,.2));
+  --bg:var(--color-background-primary,#fff);
+  --bg2:var(--color-background-secondary,#f6f6f4);
+  --r:8px;--rl:12px
+}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--txt);font-size:14px}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
 
-        /* HEADER */
-        .dashboard-header {
-            background: linear-gradient(135deg, #003366 0%, #004d99 100%);
-            color: var(--text-on-dark);
-            padding: 20px 28px;
-            border-radius: var(--radius);
-            margin-bottom: var(--gap);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 14px;
-            box-shadow: 0 4px 12px rgba(0,51,102,0.3);
-        }
-        .header-left h1 { font-size: 22px; font-weight: 700; letter-spacing: 0.3px; }
-        .header-left p { font-size: 13px; color: rgba(255,255,255,0.7); margin-top: 2px; }
-        .header-badge {
-            background: var(--accent);
-            color: #fff;
-            font-size: 11px;
-            font-weight: 600;
-            padding: 3px 10px;
-            border-radius: 20px;
-            display: inline-block;
-            margin-left: 10px;
-            vertical-align: middle;
-        }
-        .filters { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-        .filter-group { display: flex; align-items: center; gap: 6px; }
-        .filter-group label { font-size: 12px; color: rgba(255,255,255,0.75); white-space: nowrap; }
-        .filter-group select {
-            padding: 6px 10px;
-            border: 1px solid rgba(255,255,255,0.25);
-            border-radius: 6px;
-            background: rgba(255,255,255,0.12);
-            color: #fff;
-            font-size: 13px;
-            cursor: pointer;
-            outline: none;
-        }
-        .filter-group select option { background: #003366; color: #fff; }
-        .btn-reset {
-            padding: 6px 14px;
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 6px;
-            background: rgba(255,255,255,0.1);
-            color: #fff;
-            font-size: 12px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .btn-reset:hover { background: rgba(255,255,255,0.2); }
+/* HEADER */
+.hdr{background:var(--eb);border-radius:var(--rl);padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.hdr-l{display:flex;align-items:center;gap:12px}
+.logo{width:36px;height:36px;background:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--eb);flex-shrink:0}
+.hdr-title{color:#fff;font-size:15px;font-weight:500}
+.hdr-sub{color:rgba(255,255,255,.65);font-size:11px;margin-top:2px}
+.hdr-badge{background:rgba(255,255,255,.15);color:#fff;font-size:11px;padding:4px 10px;border-radius:20px;border:.5px solid rgba(255,255,255,.25);white-space:nowrap}
 
-        /* KPI */
-        .kpi-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: var(--gap);
-            margin-bottom: var(--gap);
-        }
-        .kpi-card {
-            background: var(--bg-card);
-            border-radius: var(--radius);
-            padding: 20px 22px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.07);
-            border-left: 4px solid var(--accent2);
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
-        .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .kpi-card.green { border-left-color: var(--accent); }
-        .kpi-card.orange { border-left-color: #f6ad55; }
-        .kpi-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
-        .kpi-value { font-size: 32px; font-weight: 800; color: var(--text-primary); }
-        .kpi-sub { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+/* NAV */
+.nav{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap;padding-bottom:14px;border-bottom:.5px solid var(--bd)}
+.nb{padding:6px 12px;font-size:12px;border:.5px solid var(--eb2);border-radius:var(--r);background:transparent;color:var(--em);cursor:pointer;display:flex;align-items:center;gap:5px}
+.nb:hover{background:var(--el)}
+.nb.on{background:var(--eb);color:#fff;border-color:var(--eb)}
 
-        /* CHARTS */
-        .chart-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-            gap: var(--gap);
-            margin-bottom: var(--gap);
-        }
-        .chart-container {
-            background: var(--bg-card);
-            border-radius: var(--radius);
-            padding: 20px 22px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.07);
-        }
-        .chart-container h3 {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 16px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--border);
-        }
-        .chart-container canvas { max-height: 280px; }
+/* PAGES */
+.pg{display:none}.pg.on{display:block}
 
-        /* TABLES */
-        .table-section {
-            background: var(--bg-card);
-            border-radius: var(--radius);
-            padding: 20px 22px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.07);
-            margin-bottom: var(--gap);
-            overflow-x: auto;
-        }
-        .table-section h3 {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 14px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--border);
-        }
-        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .data-table thead th {
-            text-align: left;
-            padding: 10px 12px;
-            background: #003366;
-            color: #fff;
-            font-weight: 600;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            white-space: nowrap;
-            cursor: pointer;
-            user-select: none;
-        }
-        .data-table thead th:hover { background: #004d99; }
-        .data-table tbody td { padding: 9px 12px; border-bottom: 1px solid #f0f4f8; }
-        .data-table tbody tr:hover { background: #f7fafc; }
-        .data-table tbody tr:nth-child(even) { background: #fafbfc; }
-        .data-table tbody tr:nth-child(even):hover { background: #f0f4f8; }
-        .data-table tbody tr:last-child td { border-bottom: none; }
-        .badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-        .badge-green { background: #c6f6d5; color: #276749; }
-        .badge-blue { background: #bee3f8; color: #2b6cb0; }
-        .rank-num { font-weight: 700; color: var(--text-secondary); }
-        .rank-1 { color: #d69e2e; }
-        .rank-2 { color: #718096; }
-        .rank-3 { color: #b7791f; }
+/* CHIPS */
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
+.chip{padding:4px 11px;font-size:12px;border:.5px solid var(--eb2);border-radius:20px;cursor:pointer;color:var(--em);background:transparent}
+.chip.on{background:var(--eb);color:#fff;border-color:var(--eb)}
 
-        /* PIVOT TABLE */
-        .pivot-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .pivot-table th {
-            padding: 10px 12px;
-            background: #003366;
-            color: #fff;
-            font-weight: 600;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            text-align: center;
-        }
-        .pivot-table th:first-child { text-align: left; }
-        .pivot-table td { padding: 9px 12px; border-bottom: 1px solid #f0f4f8; text-align: center; }
-        .pivot-table td:first-child { text-align: left; font-weight: 500; }
-        .pivot-table tbody tr:hover { background: #f7fafc; }
-        .pivot-table tfoot td {
-            padding: 10px 12px;
-            background: #fffacd;
-            font-weight: 700;
-            border-top: 2px solid #003366;
-            text-align: center;
-        }
-        .pivot-table tfoot td:first-child { text-align: left; }
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.metric{background:var(--el);border:.5px solid var(--eb2);border-radius:var(--r);padding:12px 14px}
+.mlabel{font-size:11px;color:var(--em);margin-bottom:3px;font-weight:500}
+.mval{font-size:21px;font-weight:500;color:var(--eb)}
+.msub{font-size:11px;color:var(--txt3);margin-top:2px}
 
-        /* BAR FILL */
-        .bar-cell { display: flex; align-items: center; gap: 8px; }
-        .bar-fill { height: 8px; background: #003366; border-radius: 4px; min-width: 4px; }
+/* CARDS */
+.card{background:var(--bg);border:.5px solid var(--bd);border-radius:var(--rl);padding:14px 16px;margin-bottom:14px}
+.ctitle{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.07em;color:var(--em);margin-bottom:12px;display:flex;align-items:center;gap:5px}
+.csub{font-size:11px;color:var(--txt3);margin-bottom:10px;margin-top:-8px}
 
-        /* FOOTER */
-        .dashboard-footer {
-            text-align: center;
-            padding: 14px;
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
+/* BADGES */
+.badge{display:inline-flex;align-items:center;font-size:11px;font-weight:500;padding:2px 7px;border-radius:20px}
+.bn{background:var(--nl);color:var(--n)}
+.bv{background:var(--vl);color:var(--v)}
+.bi{background:var(--il);color:var(--id);border:.5px solid var(--ib)}
 
-        /* NO DATA */
-        .no-data { text-align: center; padding: 32px; color: var(--text-secondary); font-size: 13px; }
+/* TABLES */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{font-size:11px;font-weight:500;color:var(--txt2);text-align:left;padding:6px 8px;border-bottom:.5px solid var(--bd);white-space:nowrap;background:var(--bg2)}
+td{padding:6px 8px;border-bottom:.5px solid var(--bd);color:var(--txt);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr.rn td:first-child{border-left:3px solid var(--nm)}
+tr.rv td:first-child{border-left:3px solid var(--vm)}
+tr.ri{background:var(--il)}
+tr.ri td:first-child{border-left:3px solid var(--im)}
+tr.rtot{background:var(--el);font-weight:500}
+tr.rsub-n{background:var(--nl);font-weight:500}
+tr.rsub-n td{color:var(--n)}
+tr.rsub-v{background:var(--vl);font-weight:500}
+tr.rsub-v td{color:var(--v)}
+tr.rsub-id{background:var(--il);font-weight:500}
+tr.rsub-id td{color:var(--id)}
+tr.rsep td{background:var(--bg2);font-size:11px;font-weight:500;color:var(--txt3);padding:4px 8px;text-transform:uppercase;letter-spacing:.06em}
+.pn{color:var(--n);font-weight:500}.pv{color:var(--v);font-weight:500}
+.pid{color:var(--id);font-weight:500}.pe{color:var(--eb);font-weight:500}
+.zero{color:var(--txt3);font-style:italic}
 
-        @media (max-width: 768px) {
-            .dashboard-header { flex-direction: column; align-items: flex-start; }
-            .kpi-row { grid-template-columns: repeat(2, 1fr); }
-            .chart-row { grid-template-columns: 1fr; }
-        }
-    </style>
+/* BAR */
+.bar-w{display:flex;align-items:center;gap:6px}
+.bar-bg{flex:1;height:6px;background:var(--bg2);border-radius:3px;overflow:hidden;min-width:50px}
+.bar-f{height:100%;border-radius:3px}
+.bfe{background:var(--em)}.bfn{background:var(--nm)}.bfv{background:var(--vm)}.bfi{background:var(--im)}
+.bpct{font-size:11px;color:var(--txt2);min-width:34px;text-align:right}
+
+/* DRILL */
+.srow{cursor:pointer}.srow:hover td{background:var(--el)!important}
+.sdet{display:none}.sdet.on{display:table-row-group}
+.sdet td{padding:5px 8px 5px 24px;font-size:12px;color:var(--txt2);background:var(--bg2);border-bottom:.5px solid var(--bd)}
+.sdet .dh td{font-size:11px;font-weight:500;color:var(--em);background:var(--bg2)!important}
+
+/* RANK ROWS */
+.rrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid var(--bd)}
+.rrow:last-child{border-bottom:none}
+.rnum{font-size:11px;font-weight:500;color:var(--txt3);min-width:20px;text-align:center}
+.rinfo{flex:1;min-width:0}
+.rname{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rdetail{font-size:11px;color:var(--txt3)}
+.rval{font-size:13px;font-weight:500;color:var(--eb);text-align:right;min-width:48px}
+
+/* EVOLUCAO */
+.evo-bars{display:flex;gap:16px;align-items:flex-end;padding:8px 0 4px}
+.evo-m{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1}
+.evo-bg{display:flex;align-items:flex-end;gap:3px;height:90px}
+.evo-b{border-radius:3px 3px 0 0;min-width:15px}
+.evo-lbl{font-size:10px;color:var(--txt3)}
+.evo-v{font-size:11px;font-weight:500;color:var(--txt2)}
+.leg{display:flex;gap:12px;font-size:11px;color:var(--txt2);flex-wrap:wrap;margin-top:8px}
+.ldot{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:4px;vertical-align:middle}
+.ldash{width:18px;height:0;border-top:2px dashed;display:inline-block;margin-right:4px;vertical-align:middle}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.two{grid-template-columns:1fr}}
+.note{background:var(--il);border:.5px solid var(--ib);border-radius:var(--r);padding:8px 12px;font-size:12px;color:var(--id);margin-bottom:14px;display:flex;align-items:center;gap:7px}
+</style>
 </head>
 <body>
-<div class="dashboard-container">
+<div class="wrap">
 
-    <!-- HEADER -->
-    <header class="dashboard-header">
-        <div class="header-left">
-            <h1>OLIRE DASH <span class="header-badge">SPI</span></h1>
-            <p>VIDA MAIS LEVE (SPI) &nbsp;|&nbsp; Base: Cupons C05 &nbsp;|&nbsp; Atualizado em 03/06/2026</p>
-        </div>
-        <div class="filters">
-            <div class="filter-group">
-                <label>Período</label>
-                <select id="filter-periodo" onchange="applyFilters()">
-                    <option value="all">Todos</option>
-                    <option value="2026-05">Mai/2026</option>
-                    <option value="2026-06">Jun/2026</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>Distrito</label>
-                <select id="filter-distrito" onchange="applyFilters()">
-                    <option value="all">Todos</option>
-                </select>
-            </div>
-            <button class="btn-reset" onclick="resetFilters()">Limpar</button>
-        </div>
-    </header>
-
-    <!-- KPIs -->
-    <section class="kpi-row">
-        <div class="kpi-card green">
-            <div class="kpi-label">Total Caixas</div>
-            <div class="kpi-value" id="kpi-total">258</div>
-            <div class="kpi-sub" id="kpi-total-sub">mai+jun 2026</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-label">Distritos Ativos</div>
-            <div class="kpi-value" id="kpi-distritos">13</div>
-            <div class="kpi-sub">regiões cobertas</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-label">Setores Ativos</div>
-            <div class="kpi-value" id="kpi-setores">45</div>
-            <div class="kpi-sub">representantes</div>
-        </div>
-        <div class="kpi-card orange">
-            <div class="kpi-label">PDVs</div>
-            <div class="kpi-value" id="kpi-pdvs">23</div>
-            <div class="kpi-sub">farmácias/distribuidoras</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-label">Maior Distrito</div>
-            <div class="kpi-value" style="font-size:18px" id="kpi-top-distrito">DIST. 1166</div>
-            <div class="kpi-sub" id="kpi-top-distrito-cx">87 caixas</div>
-        </div>
-    </section>
-
-    <!-- CHARTS ROW 1 -->
-    <section class="chart-row">
-        <div class="chart-container">
-            <h3>Caixas por Distrito</h3>
-            <canvas id="chart-distrito"></canvas>
-        </div>
-        <div class="chart-container">
-            <h3>Evolução Mensal por Distrito (Top 6)</h3>
-            <canvas id="chart-evolucao"></canvas>
-        </div>
-    </section>
-
-    <!-- CHARTS ROW 2 -->
-    <section class="chart-row">
-        <div class="chart-container">
-            <h3>Top PDVs — Ranking de Caixas</h3>
-            <canvas id="chart-pdv"></canvas>
-        </div>
-        <div class="chart-container">
-            <h3>Distribuição Mai x Jun</h3>
-            <canvas id="chart-periodo"></canvas>
-        </div>
-    </section>
-
-    <!-- PIVOT TABLE -->
-    <div class="table-section">
-        <h3>Pivot: Distritos × Período</h3>
-        <div id="pivot-container"></div>
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-l">
+    <div class="logo">EMS</div>
+    <div>
+      <div class="hdr-title">Olire &amp; Lirux — Vida Mais Leve 2026</div>
+      <div class="hdr-sub">Conversão de Cupons · Nexus · Vital · Identidade</div>
     </div>
-
-    <!-- PDV RANKING TABLE -->
-    <div class="table-section">
-        <h3>Ranking de PDVs</h3>
-        <div id="pdv-table-container"></div>
-    </div>
-
-    <!-- SETOR TABLE -->
-    <div class="table-section">
-        <h3>Detalhe por Setor / Representante</h3>
-        <div id="setor-table-container"></div>
-    </div>
-
-    <footer class="dashboard-footer">
-        OLIRE DASH SQUAD &nbsp;|&nbsp; EMS — Regional SPI &nbsp;|&nbsp; Gerado em 03/06/2026
-    </footer>
+  </div>
+  <div class="hdr-badge"><i class="ti ti-refresh" style="font-size:11px"></i> Atualizado: <span id="dt"></span></div>
 </div>
 
+<!-- NAV -->
+<div class="nav">
+  <button class="nb on" onclick="pg('consolidado',this)"><i class="ti ti-layout-dashboard"></i> Consolidado</button>
+  <button class="nb" onclick="pg('ugn',this)"><i class="ti ti-map-pin"></i> Por UGN</button>
+  <button class="nb" onclick="pg('pdv',this)"><i class="ti ti-building-store"></i> PDV por Setor</button>
+  <button class="nb" onclick="pg('redes',this)"><i class="ti ti-trophy"></i> Redes Brasil</button>
+  <button class="nb" onclick="pg('evo',this)"><i class="ti ti-chart-line"></i> Evolução</button>
+</div>
+
+<!-- ═══════════════════ PAGE 1: CONSOLIDADO ═══════════════════ -->
+<div id="pg-consolidado" class="pg on">
+  <div class="note"><i class="ti ti-info-circle" style="font-size:15px"></i>
+    <span><strong>Identidade</strong>: sem distribuição no C04 · recebeu 6.000 cupons no C05 · conversão registrada como 0 até base disponível</span>
+  </div>
+  <div class="metrics" id="m-consolidado"></div>
+  <div class="card">
+    <div class="ctitle"><i class="ti ti-table"></i> Conversão por linha</div>
+    <div class="csub">Dist. C04 e C05 = racional de distribuição · colunas de mês = conversões por data · % = Total Conv. ÷ Total Dist.</div>
+    <div class="tw"><table id="t-linhas"></table></div>
+  </div>
+  <div class="card">
+    <div class="ctitle"><i class="ti ti-map"></i> Ranking UGNs — Nexus + Vital + Identidade</div>
+    <div class="csub">Identidade somada ao total de cada UGN · barras em azul (visão consolidada)</div>
+    <div class="tw"><table id="t-ugns"></table></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 2: POR UGN ═══════════════════ -->
+<div id="pg-ugn" class="pg">
+  <div class="chips" id="chips-ugn"></div>
+  <div class="metrics" id="m-ugn"></div>
+  <div class="card">
+    <div class="ctitle"><i class="ti ti-list"></i> Setores por linha — clique para ver CNPJs</div>
+    <div class="tw"><table id="t-setores"></table></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 3: PDV POR SETOR ═══════════════════ -->
+<div id="pg-pdv" class="pg">
+  <div class="chips" id="chips-pdv-ugn"></div>
+  <div class="chips" id="chips-pdv-linha" style="margin-top:-8px"></div>
+  <div class="card">
+    <div class="ctitle"><i class="ti ti-list"></i> Setores — clique para expandir CNPJs</div>
+    <div class="tw"><table id="t-pdv"></table></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 4: REDES BRASIL ═══════════════════ -->
+<div id="pg-redes" class="pg">
+  <div class="metrics" id="m-redes"></div>
+  <div class="card">
+    <div class="ctitle"><i class="ti ti-list-numbers"></i> Top 10 redes — Nexus + Vital + Identidade · C04 + C05</div>
+    <div class="tw"><table id="t-redes"></table></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 5: EVOLUÇÃO ═══════════════════ -->
+<div id="pg-evo" class="pg">
+  <div class="chips" id="chips-evo"></div>
+  <div class="metrics" id="m-evo"></div>
+  <div class="two">
+    <div class="card">
+      <div class="ctitle"><i class="ti ti-chart-bar"></i> Caixas convertidas por mês</div>
+      <div class="evo-bars" id="evo-bars"></div>
+      <div class="leg">
+        <span><span class="ldot" style="background:var(--nm)"></span>Nexus</span>
+        <span><span class="ldot" style="background:var(--vm)"></span>Vital</span>
+        <span><span class="ldot" style="background:var(--im)"></span>Identidade</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctitle"><i class="ti ti-trending-up"></i> % conversão por UGN</div>
+      <div style="position:relative;height:200px"><canvas id="chartUGN" role="img" aria-label="Gráfico % conversão por UGN">Conversão por UGN.</canvas></div>
+      <div class="leg">
+        <span><span class="ldot" style="background:var(--eb2)"></span>% conv.</span>
+        <span><span class="ldash" style="border-color:#D32F2F"></span>Média nacional</span>
+      </div>
+    </div>
+  </div>
+  <div class="card" id="card-dist" style="display:none">
+    <div class="ctitle"><i class="ti ti-chart-line"></i> Evolução por distrito — <span id="dist-ugn-lbl"></span></div>
+    <div style="position:relative;height:200px"><canvas id="chartDist" role="img" aria-label="Gráfico evolução por distrito">Evolução por distrito.</canvas></div>
+    <div class="leg">
+      <span><span class="ldot" style="background:var(--eb2)"></span>% conv. distrito</span>
+      <span><span class="ldash" style="border-color:#0055B3"></span>Média UGN</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ctitle"><i class="ti ti-table"></i> Números — % conversão por UGN</div>
+    <div class="tw"><table id="t-evo"></table></div>
+  </div>
+</div>
+
+</div><!-- wrap -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-// ─── DADOS EMBARCADOS ──────────────────────────────────────────────────────────
-const DATA = {
-  por_periodo: { "2026-05": 147, "2026-06": 111 },
-  por_distrito: {
-    "DISTRITO 1166": 87, "DISTRITO 1004": 47, "DISTRITO 1106": 42,
-    "DISTRITO 1167": 22, "DISTRITO 1107": 18, "DISTRITO 1064": 15,
-    "DISTRITO 1105": 12, "DISTRITO 9106": 6, "DISTRITO 1101": 3,
-    "DISTRITO 9104": 3, "DISTRITO 1165": 1, "DISTRITO 1103": 1,
-    "DISTRITO 1062": 1
-  },
-  por_pdv: {
-    "FARMACIA PAGUE MENOS": 102, "RAIA DROGASIL": 39, "VENANCIO": 25,
-    "DROGARIA SAO PAULO": 22, "DROGARIA PACHECO": 20, "DROGARIA GLOBO": 17,
-    "DROGARIAS TAMOIO": 5, "DROGARIA ARAUJO": 5, "REDEPHARMA 2": 4,
-    "A NOSSA DROGARIA": 3, "MAIS B FARMA LTDA": 2, "FARMACIA INDIANA": 2,
-    "DROGARIA ROSARIO": 2, "FARMACIA J J CAVALCANTI LTDA": 1,
-    "DROGASMIL": 1, "OCEAN FARMA DROGARIA LTDA": 1, "REDEPHARMA": 1,
-    "FARMACIA SAO JOAO": 1, "PANVEL FARMACIAS": 1, "DROGARIA GARONCI LTDA": 1,
-    "FARMACIA BRITO": 1, "FARMACIAS ASSOCIADAS": 1, "DISTRIBUIDORA TAPAJOS AM": 1
-  },
-  por_setor: {
-    "11660106": { cx: 60, resp: "ROLF TAVARES MATELA", dist: "DISTRITO 1166" },
-    "10040200": { cx: 19, resp: "Leonardo Ferreira", dist: "DISTRITO 1004" },
-    "11660107": { cx: 15, resp: "ROLF TAVARES MATELA", dist: "DISTRITO 1166" },
-    "10040300": { cx: 15, resp: "Mauricio Ismério", dist: "DISTRITO 1004" },
-    "10040100": { cx: 13, resp: "Thais Rosa", dist: "DISTRITO 1004" },
-    "11670204": { cx: 10, resp: "Lais Monica Marques Santos", dist: "DISTRITO 1167" },
-    "11060108": { cx: 10, resp: "VAGO", dist: "DISTRITO 1106" },
-    "10640300": { cx: 9, resp: "Bianca Paraíso", dist: "DISTRITO 1064" },
-    "11060301": { cx: 8, resp: "CAIO RITO", dist: "DISTRITO 1106" },
-    "11060103": { cx: 7, resp: "VAGO", dist: "DISTRITO 1106" },
-    "11050107": { cx: 7, resp: "LARISSA POUBEL", dist: "DISTRITO 1105" },
-    "11070301": { cx: 7, resp: "Adelia Ribeiro de Mello Rebello", dist: "DISTRITO 1107" },
-    "11060106": { cx: 7, resp: "VAGO", dist: "DISTRITO 1106" },
-    "11660202": { cx: 5, resp: "CASSIO ESPIRITO SANTO", dist: "DISTRITO 1166" },
-    "11670309": { cx: 5, resp: "Diego Frota dos Reis", dist: "DISTRITO 1167" },
-    "91060101": { cx: 4, resp: "Antonio Andre Feitosa Isaias", dist: "DISTRITO 9106" },
-    "11070302": { cx: 4, resp: "Adelia Ribeiro de Mello Rebello", dist: "DISTRITO 1107" },
-    "11660110": { cx: 3, resp: "ROLF TAVARES MATELA", dist: "DISTRITO 1166" },
-    "11670302": { cx: 3, resp: "Diego Frota dos Reis", dist: "DISTRITO 1167" },
-    "91040305": { cx: 3, resp: "—", dist: "DISTRITO 9104" },
-    "11050103": { cx: 3, resp: "LARISSA POUBEL", dist: "DISTRITO 1105" },
-    "11660104": { cx: 3, resp: "ROLF TAVARES MATELA", dist: "DISTRITO 1166" },
-    "11010101": { cx: 2, resp: "TAMIRES LOPES", dist: "DISTRITO 1101" },
-    "11070304": { cx: 2, resp: "Adelia Ribeiro de Mello Rebello", dist: "DISTRITO 1107" },
-    "11070305": { cx: 2, resp: "Adelia Ribeiro de Mello Rebello", dist: "DISTRITO 1107" },
-    "11670201": { cx: 2, resp: "Lais Monica Marques Santos", dist: "DISTRITO 1167" },
-    "11670202": { cx: 2, resp: "Lais Monica Marques Santos", dist: "DISTRITO 1167" },
-    "91060103": { cx: 2, resp: "Antonio Andre Feitosa Isaias", dist: "DISTRITO 9106" },
-    "11070303": { cx: 2, resp: "Adelia Ribeiro de Mello Rebello", dist: "DISTRITO 1107" },
-    "11060302": { cx: 2, resp: "CAIO RITO", dist: "DISTRITO 1106" },
-    "10640100": { cx: 6, resp: "Simone Lopes Teixeira", dist: "DISTRITO 1064" },
-    "11060107": { cx: 3, resp: "VAGO", dist: "DISTRITO 1106" },
-    "11060204": { cx: 1, resp: "LUCAS BARBOSA DE SOUZA", dist: "DISTRITO 1106" },
-    "11050201": { cx: 1, resp: "Carla Patricia de Melo Ziviani", dist: "DISTRITO 1105" },
-    "11650104": { cx: 1, resp: "Julio Cesar dos Santos Oliveira", dist: "DISTRITO 1165" },
-    "11050102": { cx: 1, resp: "LARISSA POUBEL", dist: "DISTRITO 1105" },
-    "11030204": { cx: 1, resp: "Murillo Santos", dist: "DISTRITO 1103" },
-    "11070307": { cx: 1, resp: "Adelia Ribeiro de Mello Rebello", dist: "DISTRITO 1107" },
-    "11060205": { cx: 1, resp: "LUCAS BARBOSA DE SOUZA", dist: "DISTRITO 1106" },
-    "11060101": { cx: 1, resp: "VAGO", dist: "DISTRITO 1106" },
-    "11010104": { cx: 1, resp: "TAMIRES LOPES", dist: "DISTRITO 1101" },
-    "11060308": { cx: 1, resp: "CAIO RITO", dist: "DISTRITO 1106" },
-    "11660102": { cx: 1, resp: "ROLF TAVARES MATELA", dist: "DISTRITO 1166" },
-    "10620304": { cx: 1, resp: "Cristina Bessa Gama Bayeux", dist: "DISTRITO 1062" },
-    "11060306": { cx: 1, resp: "CAIO RITO", dist: "DISTRITO 1106" }
-  },
-  periodo_x_distrito: {
-    "2026-05": {
-      "DISTRITO 1166": 70, "DISTRITO 1004": 21, "DISTRITO 1106": 28,
-      "DISTRITO 1167": 6,  "DISTRITO 1107": 10, "DISTRITO 1064": 7,
-      "DISTRITO 1105": 1,  "DISTRITO 9106": 2,  "DISTRITO 1101": 1,
-      "DISTRITO 1062": 1,  "DISTRITO 9104": 0,  "DISTRITO 1165": 0, "DISTRITO 1103": 0
+const D = {"meta": {"atualizado_em": "03/06/2026", "meses": ["Maio"], "meses_keys": ["2026-05"], "ciclos_dist": ["C05"], "media_nacional": {"total_dist": 99451, "total_conv": 6385, "pct": 6.4}}, "consolidado": {"por_linha": [{"linha": "NEXUS", "dist_c04": 0, "dist_c05": 0, "total_dist": 0, "conv_por_mes": {"2026-05": 0}, "total_conv": 0, "pct_conv": 0.0}, {"linha": "VITAL", "dist_c04": 0, "dist_c05": 0, "total_dist": 0, "conv_por_mes": {"2026-05": 0}, "total_conv": 0, "pct_conv": 0.0}, {"linha": "IDENTIDADE", "dist_c04": 0, "dist_c05": 258, "total_dist": 258, "conv_por_mes": {"2026-05": 258}, "total_conv": 258, "pct_conv": 100.0}], "por_ugn": [{"ugn": "SPI OESTE", "dist_c04": 0, "dist_c05": 258, "total_dist": 258, "conv_por_mes": {"2026-05": 258}, "total_conv": 258, "pct_conv": 100.0, "media_ugn": 100.0}], "totais": {"dist_c04": 0, "dist_c05": 258, "total_dist": 258, "conv_por_mes": {"2026-05": 258}, "total_conv": 258, "pct_conv": 100.0}}, "por_ugn": {"SPI OESTE": {"dist_c04": 0, "dist_c05": 258, "total_dist": 258, "conv_por_mes": {"2026-05": 258}, "total_conv": 258, "pct_conv": 100.0, "media_ugn": 100.0, "setores": [{"cd_setor": "11660106", "nome_setor": "ROLF TAVARES MATELA", "linha": "IDENTIDADE", "dist_c04": 0, "dist_c05": 60, "total_dist": 60, "conv_por_mes": {"2026-05": 60}, "total_conv": 60, "pct_conv": 100.0, "pdvs": []}, {"cd_setor": "10040200", "nome_setor": "Leonardo Ferreira", "linha": "IDENTIDADE", "dist_c04": 0, "dist_c05": 19, "total_dist": 19, "conv_por_mes": {"2026-05": 19}, "total_conv": 19, "pct_conv": 100.0, "pdvs": []}, {"cd_setor": "11660107", "nome_setor": "ROLF TAVARES MATELA", "linha": "IDENTIDADE", "dist_c04": 0, "dist_c05": 15, "total_dist": 15, "conv_por_mes": {"2026-05": 15}, "total_conv": 15, "pct_conv": 100.0, "pdvs": []}, {"cd_setor": "10040300", "nome_setor": "Mauricio Ismério", "linha": "IDENTIDADE", "dist_c04": 0, "dist_c05": 15, "total_dist": 15, "conv_por_mes": {"2026-05": 15}, "total_conv": 15, "pct_conv": 100.0, "pdvs": []}, {"cd_setor": "10040100", "nome_setor": "Thais Rosa", "linha": "IDENTIDADE", "dist_c04": 0, "dist_c05": 13, "total_dist": 13, "conv_por_mes": {"2026-05": 13}, "total_conv": 13, "pct_conv": 100.0, "pdvs": []}, {"cd_setor": "11670204", "nome_setor": "Lais Monica Marques Santos", "linha": "IDENTIDADE", "dist_c04": 0, "dist_c05": 10, "total_dist": 10, "conv_por_mes": {"2026-05": 10}, "total_conv": 10, "pct_conv": 100.0, "pdvs": []}, {"cd_setor": "11060108", "nome_setor": "VAGO", "linha": "IDENTIDADE", "dist_c04": 0, "dist_c05": 10, "total_dist": 10, "conv_por_mes": {"2026-05": 10}, "total_conv": 10, "pct_conv": 100.0, "pdvs": []}, {"cd_setor": "10640300", "nome_setor": "Bianca Paraíso", "linha": "IDENTIDADE", "dist_c04": 0, "dist_c05": 9, "total_dist": 9, "conv_por_mes": {"2026-05": 9}, "total_conv": 9, "pct_conv": 100.0, "pdvs": []}, {"cd_setor": "11060301", "nome_setor": "CAIO RITO", "linha": "IDENTIDADE", "dist_c04": 0, "dist_c05": 8, "total_dist": 8, "conv_por_mes": {"2026-05": 8}, "total_conv": 8, "pct_conv": 100.0, "pdvs": []}, {"cd_setor": "10640100", "nome_setor": "Simone Lopes Teixeira", "linha": "IDENTIDADE", "dist_c04": 0, "dist_c05": 6, "total_dist": 6, "conv_por_mes": {"2026-05": 6}, "total_conv": 6, "pct_conv": 100.0, "pdvs": []}]}}, "redes_brasil": {"top10": [{"rank": 1, "rede": "FARMACIA PAGUE MENOS", "cnpjs_unicos": 1, "conv_por_mes": {"2026-05": 102}, "total_caixas": 102, "pct_total": 39.5}, {"rank": 2, "rede": "RAIA DROGASIL", "cnpjs_unicos": 1, "conv_por_mes": {"2026-05": 39}, "total_caixas": 39, "pct_total": 15.1}, {"rank": 3, "rede": "VENANCIO", "cnpjs_unicos": 1, "conv_por_mes": {"2026-05": 25}, "total_caixas": 25, "pct_total": 9.7}, {"rank": 4, "rede": "DROGARIA SAO PAULO", "cnpjs_unicos": 1, "conv_por_mes": {"2026-05": 22}, "total_caixas": 22, "pct_total": 8.5}, {"rank": 5, "rede": "DROGARIA PACHECO", "cnpjs_unicos": 1, "conv_por_mes": {"2026-05": 20}, "total_caixas": 20, "pct_total": 7.8}, {"rank": 6, "rede": "DROGARIA GLOBO", "cnpjs_unicos": 1, "conv_por_mes": {"2026-05": 17}, "total_caixas": 17, "pct_total": 6.6}, {"rank": 7, "rede": "DROGARIAS TAMOIO", "cnpjs_unicos": 1, "conv_por_mes": {"2026-05": 5}, "total_caixas": 5, "pct_total": 1.9}, {"rank": 8, "rede": "DROGARIA ARAUJO", "cnpjs_unicos": 1, "conv_por_mes": {"2026-05": 5}, "total_caixas": 5, "pct_total": 1.9}, {"rank": 9, "rede": "REDEPHARMA 2", "cnpjs_unicos": 1, "conv_por_mes": {"2026-05": 4}, "total_caixas": 4, "pct_total": 1.6}, {"rank": 10, "rede": "A NOSSA DROGARIA", "cnpjs_unicos": 1, "conv_por_mes": {"2026-05": 3}, "total_caixas": 3, "pct_total": 1.2}]}, "evolucao": {"por_ugn": [{"ugn": "SPI OESTE", "dist_c04": 0, "dist_c05": 258, "total_dist": 258, "conv_por_mes": {"2026-05": 258}, "total_conv": 258, "pct_conv": 100.0, "media_ugn": 100.0}], "por_distrito": []}};
+const MK = D.meta.meses_keys;
+const ML = D.meta.meses;
+const fi = n => n.toLocaleString('pt-BR');
+const fp = n => n.toFixed(1)+'%';
+const fd = (val,linha) => (linha==='IDENTIDADE'&&val===0)?'—':fi(val);
+const maxPct = arr => Math.max(...arr.map(x=>x.pct_conv||0));
+
+document.getElementById('dt').textContent = D.meta.atualizado_em;
+
+function thMeses(){return ML.map(m=>`<th>${m}</th>`).join('')}
+function tdMeses(c){return MK.map(k=>`<td>${fi(c[k]||0)}</td>`).join('')}
+function hdrTable(extras=''){
+  return `<thead><tr>${extras}<th>Dist. C04</th><th>Dist. C05</th><th>Total Dist.</th>${thMeses()}<th>Total Conv.</th><th>% Conv.</th></tr></thead>`;
+}
+function barPct(pct,max,cls='bfe'){
+  const w=max>0?Math.round(pct/max*100):0;
+  return `<td><div class="bar-w"><div class="bar-bg"><div class="bar-f ${cls}" style="width:${w}%"></div></div><span class="bpct">${fp(pct)}</span></div></td>`;
+}
+function pctClass(linha){return linha==='NEXUS'?'pn':linha==='VITAL'?'pv':linha==='IDENTIDADE'?'pid':'pe'}
+function rowClass(linha){return linha==='NEXUS'?'rn':linha==='VITAL'?'rv':'ri'}
+function tog(id){
+  const el=document.getElementById('sd-'+id);
+  const ic=document.getElementById('ic-'+id);
+  if(!el)return;
+  const op=el.classList.toggle('on');
+  ic.className='ti '+(op?'ti-chevron-down':'ti-chevron-right');
+  ic.style.cssText='font-size:12px;color:var(--txt3)';
+}
+
+function renderConsolidado(){
+  const t=D.consolidado.totais;
+  document.getElementById('m-consolidado').innerHTML=`
+    <div class="metric"><div class="mlabel">Dist. C05</div><div class="mval">${fi(t.dist_c05)}</div><div class="msub">cupons Cupons C05</div></div>
+    <div class="metric"><div class="mlabel">Total Dist.</div><div class="mval">${fi(t.total_dist)}</div></div>
+    <div class="metric"><div class="mlabel">Total Conv.</div><div class="mval">${fi(t.total_conv)}</div></div>
+    <div class="metric"><div class="mlabel">% Conversão</div><div class="mval">${fp(t.pct_conv)}</div></div>
+    <div class="metric"><div class="mlabel">Distritos</div><div class="mval">13</div></div>
+    <div class="metric"><div class="mlabel">Setores</div><div class="mval">45</div></div>
+    <div class="metric"><div class="mlabel">PDVs</div><div class="mval">23</div></div>`;
+
+  let html=hdrTable('<th>Linha</th>');
+  html+='<tbody>';
+  D.consolidado.por_linha.forEach(l=>{
+    const pc=pctClass(l.linha);
+    const rc=rowClass(l.linha);
+    const badge=l.linha==='NEXUS'?'bn':l.linha==='VITAL'?'bv':'bi';
+    html+=`<tr class="${rc}">
+      <td><span class="badge ${badge}">${l.linha}</span></td>
+      <td>${fd(l.dist_c04,l.linha)}</td><td>${fi(l.dist_c05)}</td><td>${fi(l.total_dist)}</td>
+      ${tdMeses(l.conv_por_mes)}
+      <td>${fi(l.total_conv)}</td>
+      <td class="${pc}">${fp(l.pct_conv)}</td>
+    </tr>`;
+  });
+  const t2=D.consolidado.totais;
+  html+=`<tr class="rtot"><td><strong>TOTAL</strong></td>
+    <td>${fi(t2.dist_c04)}</td><td>${fi(t2.dist_c05)}</td><td>${fi(t2.total_dist)}</td>
+    ${tdMeses(t2.conv_por_mes)}
+    <td><strong>${fi(t2.total_conv)}</strong></td><td class="pe">${fp(t2.pct_conv)}</td></tr>`;
+  html+='</tbody>';
+  document.getElementById('t-linhas').innerHTML=hdrTable('<th>Linha</th>')+html.replace(hdrTable('<th>Linha</th>'),'');
+
+  const maxP=maxPct(D.consolidado.por_ugn);
+  let hu=hdrTable('<th>#</th><th>UGN</th>');
+  hu+='<tbody>';
+  D.consolidado.por_ugn.forEach((u,i)=>{
+    hu+=`<tr><td>${i+1}</td><td>${u.ugn}</td>
+      <td>${fi(u.dist_c04)}</td><td>${fi(u.dist_c05)}</td><td>${fi(u.total_dist)}</td>
+      ${tdMeses(u.conv_por_mes)}
+      <td>${fi(u.total_conv)}</td>
+      ${barPct(u.pct_conv,maxP,'bfe')}
+    </tr>`;
+  });
+  hu+=`<tr class="rtot"><td></td><td><strong>TOTAL GERAL</strong></td>
+    <td>${fi(t2.dist_c04)}</td><td>${fi(t2.dist_c05)}</td><td>${fi(t2.total_dist)}</td>
+    ${tdMeses(t2.conv_por_mes)}
+    <td><strong>${fi(t2.total_conv)}</strong></td><td class="pe">${fp(t2.pct_conv)}</td></tr>`;
+  hu+='</tbody>';
+  document.getElementById('t-ugns').innerHTML=hdrTable('<th>#</th><th>UGN</th>')+hu.replace(hdrTable('<th>#</th><th>UGN</th>'),'');
+}
+
+let curUGN = Object.keys(D.por_ugn)[0];
+
+function selUGN(ugn, cid, fn){
+  curUGN=ugn;
+  ['chips-ugn','chips-pdv-ugn','chips-evo'].forEach(id=>{
+    document.querySelectorAll('#'+id+' .chip').forEach(b=>b.classList.toggle('on',b.textContent===ugn));
+  });
+  if(fn===1) renderUGN();
+  else if(fn===2) renderPDV();
+  else if(fn===3) renderEvoUGN();
+}
+
+function renderUGN(){
+  const u=D.por_ugn[curUGN];
+  const idDist=u.setores.filter(s=>s.linha==='IDENTIDADE').reduce((a,s)=>a+s.total_dist,0);
+  document.getElementById('m-ugn').innerHTML=`
+    <div class="metric"><div class="mlabel">Total Dist.</div><div class="mval">${fi(u.total_dist)}</div></div>
+    <div class="metric"><div class="mlabel" style="color:var(--id)">Cupons C05</div><div class="mval" style="color:var(--id)">${fi(idDist)}</div></div>
+    <div class="metric"><div class="mlabel">Total Conv.</div><div class="mval">${fi(u.total_conv)}</div></div>
+    <div class="metric"><div class="mlabel">% Conversão</div><div class="mval">${fp(u.pct_conv)}</div></div>`;
+
+  let ht=`<thead><tr><th style="width:20px"></th><th>Setor (Cód)</th><th>Responsável</th><th>Linha</th><th>Dist. C05</th>${thMeses()}<th>Total Conv.</th><th>% Conv.</th></tr></thead><tbody>`;
+  u.setores.forEach(s=>{
+    const sid=s.cd_setor+'_'+s.linha;
+    const badge='bi';
+    ht+=`<tr class="srow ri" onclick="tog('${sid}')">
+      <td><i class="ti ti-chevron-right" id="ic-${sid}" style="font-size:12px;color:var(--txt3)"></i></td>
+      <td>${s.cd_setor}</td>
+      <td>${s.nome_setor}</td>
+      <td><span class="badge ${badge}">OLIRE SPI</span></td>
+      <td>${fi(s.dist_c05)}</td>
+      ${tdMeses(s.conv_por_mes)}
+      <td>${fi(s.total_conv)}</td>
+      <td class="pid">${fp(s.pct_conv)}</td>
+    </tr>`;
+    ht+=`<tbody id="sd-${sid}" class="sdet"><tr><td></td><td colspan="7" style="color:var(--txt3);font-size:11px">PDVs disponíveis após leitura da base Drive</td></tr></tbody>`;
+  });
+  ht+=`<tr class="rtot"><td></td><td colspan="3"><strong>Total ${curUGN}</strong></td>
+    <td>${fi(u.dist_c05)}</td>
+    ${tdMeses(u.conv_por_mes)}
+    <td><strong>${fi(u.total_conv)}</strong></td><td class="pe">${fp(u.pct_conv)}</td>
+  </tr></tbody>`;
+  document.getElementById('t-setores').innerHTML=ht;
+}
+
+let curLinha='IDENTIDADE';
+function renderPDV(){
+  const cl=document.getElementById('chips-pdv-linha');
+  cl.innerHTML=['IDENTIDADE'].map(l=>
+    `<button class="chip on">${l}</button>`
+  ).join('');
+  const u=D.por_ugn[curUGN];
+  const sets=u.setores.filter(s=>s.linha===curLinha).sort((a,b)=>b.total_conv-a.total_conv);
+  let ht=`<thead><tr><th style="width:20px"></th><th>Setor (Cód)</th><th>Responsável</th><th>Dist. C05</th>${thMeses()}<th>Total Conv.</th><th>% Conv.</th></tr></thead><tbody>`;
+  sets.forEach(s=>{
+    const sid='p3_'+s.cd_setor;
+    ht+=`<tr class="srow ri" onclick="tog('${sid}')">
+      <td><i class="ti ti-chevron-right" id="ic-${sid}" style="font-size:12px;color:var(--txt3)"></i></td>
+      <td>${s.cd_setor}</td><td>${s.nome_setor}</td>
+      <td>${fi(s.dist_c05)}</td>
+      ${tdMeses(s.conv_por_mes)}
+      <td>${fi(s.total_conv)}</td>
+      <td class="pid">${fp(s.pct_conv)}</td>
+    </tr>`;
+    ht+=`<tbody id="sd-${sid}" class="sdet"><tr><td></td><td colspan="6" style="color:var(--txt3);font-size:11px">PDVs disponíveis após leitura base Drive</td></tr></tbody>`;
+  });
+  ht+='</tbody>';
+  document.getElementById('t-pdv').innerHTML=ht;
+}
+
+function renderRedes(){
+  document.getElementById('m-redes').innerHTML=`
+    <div class="metric"><div class="mlabel">Redes únicas</div><div class="mval">23</div><div class="msub">PDVs ativos</div></div>
+    <div class="metric"><div class="mlabel">Top rede</div><div class="mval" style="font-size:13px">PAGUE MENOS</div><div class="msub">102 caixas</div></div>
+    <div class="metric"><div class="mlabel">Concentração</div><div class="mval">39,5%</div><div class="msub">top rede / total</div></div>
+    <div class="metric"><div class="mlabel">Total conv.</div><div class="mval">258</div><div class="msub">C05</div></div>`;
+  const top=D.redes_brasil.top10;
+  const medals=['🥇','🥈','🥉'];
+  let ht=`<thead><tr><th>#</th><th>Rede / PDV</th><th>CNPJs</th>${thMeses()}<th>Total Cx</th><th>% Total</th><th style="min-width:80px">Barra</th></tr></thead><tbody>`;
+  const maxT=top[0].total_caixas||1;
+  top.forEach((r,i)=>{
+    ht+=`<tr>
+      <td>${medals[i]||i+1}</td>
+      <td style="font-weight:500">${r.rede}</td>
+      <td>${r.cnpjs_unicos}</td>
+      ${MK.map(k=>`<td>${r.conv_por_mes&&r.conv_por_mes[k]?fi(r.conv_por_mes[k]):'—'}</td>`).join('')}
+      <td style="font-weight:500">${fi(r.total_caixas)}</td>
+      <td class="pe">${fp(r.pct_total)}</td>
+      <td><div class="bar-w"><div class="bar-bg"><div class="bar-f bfe" style="width:${Math.round(r.total_caixas/maxT*100)}%"></div></div></div></td>
+    </tr>`;
+  });
+  ht+='</tbody>';
+  document.getElementById('t-redes').innerHTML=ht;
+}
+
+let chartUGN=null, chartDist=null;
+function renderEvoUGN(){
+  const ugns=D.evolucao.por_ugn;
+  const mediaNac=D.meta.media_nacional.pct;
+  const u=D.por_ugn[curUGN];
+  document.getElementById('m-evo').innerHTML=`
+    <div class="metric"><div class="mlabel">Total Dist.</div><div class="mval">${fi(u.total_dist)}</div></div>
+    <div class="metric"><div class="mlabel">Total Conv.</div><div class="mval">${fi(u.total_conv)}</div></div>
+    <div class="metric"><div class="mlabel">% Conversão</div><div class="mval">${fp(u.pct_conv)}</div></div>
+    <div class="metric"><div class="mlabel">Média nacional</div><div class="mval" style="color:var(--em)">${fp(mediaNac)}</div></div>`;
+
+  const nexusConv=ML.map((_,i)=>0);
+  const vitalConv=ML.map((_,i)=>0);
+  const idConv=ML.map((_,i)=>{const k=MK[i];return D.consolidado.totais.conv_por_mes[k]||0;});
+  const maxBar=Math.max(...idConv)||1;
+  const barsHtml=ML.map((m,i)=>{
+    const id=idConv[i];
+    const ih=Math.round(id/maxBar*80);
+    return `<div class="evo-m">
+      <div class="evo-bg">
+        <div class="evo-b bfn" style="height:2px;width:16px;opacity:.2"></div>
+        <div class="evo-b bfv" style="height:2px;width:16px;opacity:.2"></div>
+        <div class="evo-b bfi" style="height:${ih}px;width:16px"></div>
+      </div>
+      <div class="evo-lbl">${m}</div>
+      <div class="evo-v">${fi(id)}</div>
+    </div>`;
+  });
+  document.getElementById('evo-bars').innerHTML=barsHtml.join('');
+
+  if(chartUGN){try{chartUGN.destroy()}catch(e){}}
+  const ctx=document.getElementById('chartUGN').getContext('2d');
+  chartUGN=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:ugns.map(u=>u.ugn),
+      datasets:[{label:'% Conv.',data:ugns.map(u=>+u.pct_conv.toFixed(1)),backgroundColor:'#003087',borderRadius:3,borderWidth:0}]
     },
-    "2026-06": {
-      "DISTRITO 1166": 17, "DISTRITO 1004": 26, "DISTRITO 1106": 14,
-      "DISTRITO 1167": 16, "DISTRITO 1107": 8,  "DISTRITO 1064": 8,
-      "DISTRITO 1105": 11, "DISTRITO 9106": 4,  "DISTRITO 1101": 2,
-      "DISTRITO 1062": 0,  "DISTRITO 9104": 3,  "DISTRITO 1165": 1, "DISTRITO 1103": 1
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.parsed.y.toFixed(1)}%`}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{font:{size:10},callback:v=>v+'%'}}}
     }
-  }
-};
+  });
 
-const COLORS = ['#003366','#0066cc','#00a86b','#f6ad55','#e53e3e','#805ad5','#2b6cb0','#276749','#c05621','#553c9a','#2c7a7b','#97266d','#285e61'];
+  document.getElementById('card-dist').style.display='none';
 
-// ─── ESTADO ────────────────────────────────────────────────────────────────────
-let filterPeriodo = 'all';
-let filterDistrito = 'all';
-let charts = {};
-
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-window.onload = () => {
-    populateDistritoFilter();
-    renderAll();
-};
-
-function populateDistritoFilter() {
-    const sel = document.getElementById('filter-distrito');
-    Object.keys(DATA.por_distrito).sort().forEach(d => {
-        const opt = document.createElement('option');
-        opt.value = d;
-        opt.textContent = d.replace('DISTRITO ', 'Dist. ');
-        sel.appendChild(opt);
-    });
+  let ht=`<thead><tr><th>UGN</th><th>Dist. C05</th>${thMeses()}<th>Total Conv.</th><th>% Conv.</th></tr></thead><tbody>`;
+  ugns.forEach(u=>{
+    ht+=`<tr><td>${u.ugn}</td><td>${fi(u.dist_c05)}</td>${tdMeses(u.conv_por_mes)}<td>${fi(u.total_conv)}</td><td class="pe">${fp(u.pct_conv)}</td></tr>`;
+  });
+  const t=D.consolidado.totais;
+  ht+=`<tr class="rtot"><td><strong>TOTAL</strong></td><td>${fi(t.dist_c05)}</td>${tdMeses(t.conv_por_mes)}<td><strong>${fi(t.total_conv)}</strong></td><td class="pe"><strong>${fp(t.pct_conv)}</strong></td></tr>`;
+  ht+='</tbody>';
+  document.getElementById('t-evo').innerHTML=ht;
 }
 
-function applyFilters() {
-    filterPeriodo = document.getElementById('filter-periodo').value;
-    filterDistrito = document.getElementById('filter-distrito').value;
-    renderAll();
+function pg(id,btn){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('pg-'+id).classList.add('on');
+  btn.classList.add('on');
 }
 
-function resetFilters() {
-    document.getElementById('filter-periodo').value = 'all';
-    document.getElementById('filter-distrito').value = 'all';
-    filterPeriodo = 'all';
-    filterDistrito = 'all';
-    renderAll();
+function selUGN2(ugn,btn){
+  curUGN=ugn;
+  document.querySelectorAll('#chips-evo .chip').forEach(b=>b.classList.toggle('on',b.textContent===(ugn==='TODAS'?'Todas UGNs':ugn)));
+  renderEvoUGN();
 }
 
-// ─── COMPUTED DATA ─────────────────────────────────────────────────────────────
-function getDistritoData() {
-    const distritos = Object.keys(DATA.por_distrito);
-    return distritos.map(d => {
-        let cx = 0;
-        if (filterPeriodo === 'all') {
-            cx = DATA.por_distrito[d];
-        } else {
-            cx = (DATA.periodo_x_distrito[filterPeriodo] || {})[d] || 0;
-        }
-        return { name: d, cx };
-    }).filter(d => filterDistrito === 'all' || d.name === filterDistrito)
-      .sort((a, b) => b.cx - a.cx);
-}
-
-function getPdvData() {
-    return Object.entries(DATA.por_pdv)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10);
-}
-
-function getSetorData() {
-    return Object.entries(DATA.por_setor)
-        .filter(([, v]) => filterDistrito === 'all' || v.dist === filterDistrito)
-        .sort((a, b) => b[1].cx - a[1].cx);
-}
-
-function getTotais() {
-    const distData = getDistritoData();
-    const total = distData.reduce((s, d) => s + d.cx, 0);
-    const nDistritos = distData.filter(d => d.cx > 0).length;
-    const setores = getSetorData();
-    const nSetores = setores.filter(([, v]) => v.cx > 0).length;
-    const top = distData[0] || { name: '—', cx: 0 };
-    return { total, nDistritos, nSetores, top };
-}
-
-// ─── RENDER ALL ───────────────────────────────────────────────────────────────
-function renderAll() {
-    renderKPIs();
-    renderChartDistrito();
-    renderChartEvolucao();
-    renderChartPdv();
-    renderChartPeriodo();
-    renderPivot();
-    renderPdvTable();
-    renderSetorTable();
-}
-
-// ─── KPIs ─────────────────────────────────────────────────────────────────────
-function renderKPIs() {
-    const { total, nDistritos, nSetores, top } = getTotais();
-    document.getElementById('kpi-total').textContent = total;
-    document.getElementById('kpi-total-sub').textContent =
-        filterPeriodo === 'all' ? 'mai+jun 2026' : (filterPeriodo === '2026-05' ? 'mai/2026' : 'jun/2026');
-    document.getElementById('kpi-distritos').textContent = nDistritos;
-    document.getElementById('kpi-setores').textContent = nSetores;
-    document.getElementById('kpi-top-distrito').textContent = top.name.replace('DISTRITO ', 'DIST. ');
-    document.getElementById('kpi-top-distrito-cx').textContent = top.cx + ' caixas';
-}
-
-// ─── CHART: DISTRITO ─────────────────────────────────────────────────────────
-function renderChartDistrito() {
-    const data = getDistritoData().filter(d => d.cx > 0);
-    const labels = data.map(d => d.name.replace('DISTRITO ', 'Dist. '));
-    const values = data.map(d => d.cx);
-
-    if (charts['distrito']) { charts['distrito'].destroy(); }
-    const ctx = document.getElementById('chart-distrito').getContext('2d');
-    charts['distrito'] = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels,
-            datasets: [{ label: 'Caixas', data: values,
-                backgroundColor: COLORS.map(c => c + 'cc'),
-                borderColor: COLORS, borderWidth: 1, borderRadius: 4 }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false, indexAxis: 'y',
-            plugins: { legend: { display: false } },
-            scales: { x: { beginAtZero: true, grid: { display: true } }, y: { grid: { display: false } } }
-        }
-    });
-}
-
-// ─── CHART: EVOLUCAO MENSAL ───────────────────────────────────────────────────
-function renderChartEvolucao() {
-    const allDistritos = Object.entries(DATA.por_distrito)
-        .sort((a, b) => b[1] - a[1]).slice(0, 6).map(d => d[0]);
-
-    const periodos = ['2026-05', '2026-06'];
-    const datasets = allDistritos.map((d, i) => ({
-        label: d.replace('DISTRITO ', 'Dist. '),
-        data: periodos.map(p => (DATA.periodo_x_distrito[p] || {})[d] || 0),
-        borderColor: COLORS[i % COLORS.length],
-        backgroundColor: COLORS[i % COLORS.length] + '22',
-        borderWidth: 2, fill: false, tension: 0.3, pointRadius: 5
-    }));
-
-    if (charts['evolucao']) { charts['evolucao'].destroy(); }
-    const ctx = document.getElementById('chart-evolucao').getContext('2d');
-    charts['evolucao'] = new Chart(ctx, {
-        type: 'line',
-        data: { labels: ['Mai/2026', 'Jun/2026'], datasets },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { position: 'right', labels: { usePointStyle: true, font: { size: 11 } } } },
-            scales: { y: { beginAtZero: true } }
-        }
-    });
-}
-
-// ─── CHART: PDV ───────────────────────────────────────────────────────────────
-function renderChartPdv() {
-    const data = getPdvData();
-    const labels = data.map(([k]) => k.length > 20 ? k.slice(0,18)+'…' : k);
-    const values = data.map(([, v]) => v);
-
-    if (charts['pdv']) { charts['pdv'].destroy(); }
-    const ctx = document.getElementById('chart-pdv').getContext('2d');
-    charts['pdv'] = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels,
-            datasets: [{ label: 'Caixas', data: values,
-                backgroundColor: '#0066cccc', borderColor: '#0066cc', borderWidth: 1, borderRadius: 4 }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false, indexAxis: 'y',
-            plugins: { legend: { display: false } },
-            scales: { x: { beginAtZero: true }, y: { grid: { display: false } } }
-        }
-    });
-}
-
-// ─── CHART: PERIODO ───────────────────────────────────────────────────────────
-function renderChartPeriodo() {
-    if (charts['periodo']) { charts['periodo'].destroy(); }
-    const ctx = document.getElementById('chart-periodo').getContext('2d');
-    charts['periodo'] = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Mai/2026', 'Jun/2026'],
-            datasets: [{ data: [147, 111],
-                backgroundColor: ['#003366cc', '#00a86bcc'],
-                borderColor: ['#003366', '#00a86b'], borderWidth: 2 }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false, cutout: '60%',
-            plugins: {
-                legend: { position: 'bottom' },
-                tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.parsed} cx (${((ctx.parsed/258)*100).toFixed(1)}%)` } }
-            }
-        }
-    });
-}
-
-// ─── PIVOT TABLE ──────────────────────────────────────────────────────────────
-function renderPivot() {
-    const distritos = Object.keys(DATA.por_distrito).sort((a,b) => DATA.por_distrito[b] - DATA.por_distrito[a]);
-    const periodos = ['2026-05', '2026-06'];
-    const filtered = filterDistrito === 'all' ? distritos : [filterDistrito];
-
-    let totMai = 0, totJun = 0, totGeral = 0;
-
-    let html = `<table class="pivot-table"><thead><tr>
-        <th>Distrito</th><th>Mai/2026</th><th>Jun/2026</th><th>TOTAL</th>
-    </tr></thead><tbody>`;
-
-    filtered.forEach(d => {
-        const mai = (DATA.periodo_x_distrito['2026-05'] || {})[d] || 0;
-        const jun = (DATA.periodo_x_distrito['2026-06'] || {})[d] || 0;
-        const tot = mai + jun;
-        if (filterPeriodo !== 'all') {
-            const val = filterPeriodo === '2026-05' ? mai : jun;
-            if (val === 0) return;
-        }
-        totMai += mai; totJun += jun; totGeral += tot;
-        const maxVal = Math.max(...filtered.map(x => {
-            const m = (DATA.periodo_x_distrito['2026-05'] || {})[x] || 0;
-            const j = (DATA.periodo_x_distrito['2026-06'] || {})[x] || 0;
-            return m + j;
-        }), 1);
-        const barW = Math.round((tot / maxVal) * 80);
-        html += `<tr>
-            <td>${d}</td>
-            <td>${mai > 0 ? `<span class="badge badge-blue">${mai}</span>` : '—'}</td>
-            <td>${jun > 0 ? `<span class="badge badge-green">${jun}</span>` : '—'}</td>
-            <td><div class="bar-cell"><div class="bar-fill" style="width:${barW}px"></div><strong>${tot}</strong></div></td>
-        </tr>`;
-    });
-
-    html += `</tbody><tfoot><tr>
-        <td>TOTAL GERAL</td>
-        <td>${totMai}</td><td>${totJun}</td><td><strong>${totGeral}</strong></td>
-    </tr></tfoot></table>`;
-
-    document.getElementById('pivot-container').innerHTML = html;
-}
-
-// ─── PDV TABLE ────────────────────────────────────────────────────────────────
-function renderPdvTable() {
-    const data = getPdvData();
-    const max = data[0]?.[1] || 1;
-    let html = `<table class="data-table"><thead><tr>
-        <th>#</th><th>PDV / Farmácia</th><th>Caixas</th><th>Participação</th>
-    </tr></thead><tbody>`;
-
-    data.forEach(([nome, cx], i) => {
-        const pct = ((cx / 258) * 100).toFixed(1);
-        const barW = Math.round((cx / max) * 100);
-        const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-num';
-        html += `<tr>
-            <td><span class="${rankClass}">${i + 1}º</span></td>
-            <td>${nome}</td>
-            <td><strong>${cx}</strong></td>
-            <td><div class="bar-cell">
-                <div class="bar-fill" style="width:${barW}px;background:#0066cc"></div>
-                <span style="font-size:12px;color:#718096">${pct}%</span>
-            </div></td>
-        </tr>`;
-    });
-
-    html += '</tbody></table>';
-    document.getElementById('pdv-table-container').innerHTML = html;
-}
-
-// ─── SETOR TABLE ──────────────────────────────────────────────────────────────
-function renderSetorTable() {
-    const data = getSetorData();
-    let html = `<table class="data-table"><thead><tr>
-        <th onclick="sortSetorTable('setor')">Setor ↕</th>
-        <th onclick="sortSetorTable('dist')">Distrito ↕</th>
-        <th onclick="sortSetorTable('resp')">Representante ↕</th>
-        <th onclick="sortSetorTable('cx')">Caixas ↕</th>
-    </tr></thead><tbody>`;
-
-    data.forEach(([setor, v]) => {
-        html += `<tr>
-            <td><code>${setor}</code></td>
-            <td>${v.dist.replace('DISTRITO ', 'Dist. ')}</td>
-            <td>${v.resp || '—'}</td>
-            <td><span class="badge badge-blue">${v.cx}</span></td>
-        </tr>`;
-    });
-
-    html += '</tbody></table>';
-    document.getElementById('setor-table-container').innerHTML = html;
-}
-
-let setorSortCol = 'cx', setorSortDir = -1;
-function sortSetorTable(col) {
-    if (setorSortCol === col) setorSortDir *= -1;
-    else { setorSortCol = col; setorSortDir = -1; }
-    renderSetorTable();
-}
-
-function getSetorData() {
-    let entries = Object.entries(DATA.por_setor)
-        .filter(([, v]) => filterDistrito === 'all' || v.dist === filterDistrito);
-    entries.sort((a, b) => {
-        let av, bv;
-        if (setorSortCol === 'cx') { av = a[1].cx; bv = b[1].cx; }
-        else if (setorSortCol === 'dist') { av = a[1].dist; bv = b[1].dist; }
-        else if (setorSortCol === 'resp') { av = a[1].resp; bv = b[1].resp; }
-        else { av = a[0]; bv = b[0]; }
-        return av < bv ? setorSortDir : av > bv ? -setorSortDir : 0;
-    });
-    return entries;
-}
+window.addEventListener('load',function(){
+  renderConsolidado();
+  ['chips-ugn','chips-pdv-ugn'].forEach((cid,i)=>{
+    const fn=i===0?1:2;
+    document.getElementById(cid).innerHTML=Object.keys(D.por_ugn).map(u=>
+      `<button class="chip${u===curUGN?' on':''}" onclick="selUGN('${u}','${cid}',${fn})">${u}</button>`
+    ).join('');
+  });
+  document.getElementById('chips-evo').innerHTML=Object.keys(D.por_ugn).map(u=>
+    `<button class="chip${u===curUGN?' on':''}" onclick="selUGN2('${u}',this)">${u}</button>`
+  ).join('');
+  renderUGN();
+  renderPDV();
+  renderRedes();
+  renderEvoUGN();
+});
 </script>
 </body>
 </html>
