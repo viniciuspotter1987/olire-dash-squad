@@ -493,7 +493,7 @@ h(f'''<div id="page-redes" class="page">
     <div class="metric"><div class="metric-label">Redes únicas</div><div class="metric-value">{fmt_br(total_redes)}</div><div class="metric-sub">redes identificadas</div></div>
     <div class="metric"><div class="metric-label">CNPJs únicos</div><div class="metric-value">{fmt_br(total_cnpjs)}</div><div class="metric-sub">farmácias ativas</div></div>
     <div class="metric"><div class="metric-label">Top rede</div><div class="metric-value" style="font-size:14px">{top1_nm[:16]}</div><div class="metric-sub">{fmt_br(top1_d["cx"])} cx</div></div>
-    <div class="metric"><div class="metric-label">Conc. Top 5</div><div class="metric-value">{top5_pct:.1f}%'.replace(".",",")</div><div class="metric-sub">do total de caixas</div></div>
+    <div class="metric"><div class="metric-label">Conc. Top 5</div><div class="metric-value">{str(top5_pct).replace(".",",")}%</div><div class="metric-sub">do total de caixas</div></div>
   </div>
   <div class="card">
     <div class="card-title"><i class="ti ti-trophy"></i> Top Redes — todas as linhas</div>
@@ -505,7 +505,8 @@ medals = ['🥇','🥈','🥉']+[str(i) for i in range(4,16)]
 for i, (nm, d) in enumerate(top_redes[:10]):
     pct = round(d['cx']/total_cx_redes*100,1) if total_cx_redes else 0
     bw = int(pct/top5_pct*80) if top5_pct else 0
-    h(f'        <tr><td>{medals[i]}</td><td><strong>{nm}</strong></td><td>{fmt_br(d["cx"])}</td><td>{len(d["cnpjs"])}</td><td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:{bw}%"></div></div><span class="bar-pct">{pct:.1f}%'.replace(".",",")+f'</span></div></td></tr>')
+    pct_s = f'{pct:.1f}'.replace('.',',')
+    h(f'        <tr><td>{medals[i]}</td><td><strong>{nm}</strong></td><td>{fmt_br(d["cx"])}</td><td>{len(d["cnpjs"])}</td><td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:{bw}%"></div></div><span class="bar-pct">{pct_s}%</span></div></td></tr>')
 
 h('''      </tbody>
     </table></div>
