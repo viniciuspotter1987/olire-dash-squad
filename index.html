@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OLIRE DASH — VIDA MAIS LEVE (SPI)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --bg-primary: #f0f4f8;
+            --bg-card: #ffffff;
+            --bg-header: #003366;
+            --accent: #00a86b;
+            --accent2: #0066cc;
+            --text-primary: #1a202c;
+            --text-secondary: #718096;
+            --text-on-dark: #ffffff;
+            --border: #e2e8f0;
+            --positive: #00a86b;
+            --gap: 16px;
+            --radius: 10px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+        .dashboard-container { max-width: 1400px; margin: 0 auto; padding: var(--gap); }
+
+        /* HEADER */
+        .dashboard-header {
+            background: linear-gradient(135deg, #003366 0%, #004d99 100%);
+            color: var(--text-on-dark);
+            padding: 20px 28px;
+            border-radius: var(--radius);
+            margin-bottom: var(--gap);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px;
+            box-shadow: 0 4px 12px rgba(0,51,102,0.3);
+        }
+        .header-left h1 { font-size: 22px; font-weight: 700; letter-spacing: 0.3px; }
+        .header-left p { font-size: 13px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+        .header-badge {
+            background: var(--accent);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        .filters { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .filter-group { display: flex; align-items: center; gap: 6px; }
+        .filter-group label { font-size: 12px; color: rgba(255,255,255,0.75); white-space: nowrap; }
+        .filter-group select {
+            padding: 6px 10px;
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 6px;
+            background: rgba(255,255,255,0.12);
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+            outline: none;
+        }
+        .filter-group select option { background: #003366; color: #fff; }
+        .btn-reset {
+            padding: 6px 14px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 6px;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-reset:hover { background: rgba(255,255,255,0.2); }
+
+        /* KPI */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: var(--gap);
+            margin-bottom: var(--gap);
+        }
+        .kpi-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 20px 22px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+            border-left: 4px solid var(--accent2);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .kpi-card.green { border-left-color: var(--accent); }
+        .kpi-card.orange { border-left-color: #f6ad55; }
+        .kpi-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+        .kpi-value { font-size: 32px; font-weight: 800; color: var(--text-primary); }
+        .kpi-sub { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+        /* CHARTS */
+        .chart-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: var(--gap);
+            margin-bottom: var(--gap);
+        }
+        .chart-container {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 20px 22px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+        }
+        .chart-container h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        .chart-container canvas { max-height: 280px; }
+
+        /* TABLES */
+        .table-section {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 20px 22px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+            margin-bottom: var(--gap);
+            overflow-x: auto;
+        }
+        .table-section h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .data-table thead th {
+            text-align: left;
+            padding: 10px 12px;
+            background: #003366;
+            color: #fff;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+        }
+        .data-table thead th:hover { background: #004d99; }
+        .data-table tbody td { padding: 9px 12px; border-bottom: 1px solid #f0f4f8; }
+        .data-table tbody tr:hover { background: #f7fafc; }
+        .data-table tbody tr:nth-child(even) { background: #fafbfc; }
+        .data-table tbody tr:nth-child(even):hover { background: #f0f4f8; }
+        .data-table tbody tr:last-child td { border-bottom: none; }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-green { background: #c6f6d5; color: #276749; }
+        .badge-blue { background: #bee3f8; color: #2b6cb0; }
+        .rank-num { font-weight: 700; color: var(--text-secondary); }
+        .rank-1 { color: #d69e2e; }
+        .rank-2 { color: #718096; }
+        .rank-3 { color: #b7791f; }
+
+        /* PIVOT TABLE */
+        .pivot-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .pivot-table th {
+            padding: 10px 12px;
+            background: #003366;
+            color: #fff;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: center;
+        }
+        .pivot-table th:first-child { text-align: left; }
+        .pivot-table td { padding: 9px 12px; border-bottom: 1px solid #f0f4f8; text-align: center; }
+        .pivot-table td:first-child { text-align: left; font-weight: 500; }
+        .pivot-table tbody tr:hover { background: #f7fafc; }
+        .pivot-table tfoot td {
+            padding: 10px 12px;
+            background: #fffacd;
+            font-weight: 700;
+            border-top: 2px solid #003366;
+            text-align: center;
+        }
+        .pivot-table tfoot td:first-child { text-align: left; }
+
+        /* BAR FILL */
+        .bar-cell { display: flex; align-items: center; gap: 8px; }
+        .bar-fill { height: 8px; background: #003366; border-radius: 4px; min-width: 4px; }
+
+        /* FOOTER */
+        .dashboard-footer {
+            text-align: center;
+            padding: 14px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* NO DATA */
+        .no-data { text-align: center; padding: 32px; color: var(--text-secondary); font-size: 13px; }
+
+        @media (max-width: 768px) {
+            .dashboard-header { flex-direction: column; align-items: flex-start; }
+            .kpi-row { grid-template-columns: repeat(2, 1fr); }
+            .chart-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard-container">
+
+    <!-- HEADER -->
+    <header class="dashboard-header">
+        <div class="header-left">
+            <h1>OLIRE DASH <span class="header-badge">SPI</span></h1>
+            <p>VIDA MAIS LEVE (SPI) &nbsp;|&nbsp; Base: Cupons C05 &nbsp;|&nbsp; Atualizado em 03/06/2026</p>
+        </div>
+        <div class="filters">
+            <div class="filter-group">
+                <label>Período</label>
+                <select id="filter-periodo" onchange="applyFilters()">
+                    <option value="all">Todos</option>
+                    <option value="2026-05">Mai/2026</option>
+                    <option value="2026-06">Jun/2026</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Distrito</label>
+                <select id="filter-distrito" onchange="applyFilters()">
+                    <option value="all">Todos</option>
+                </select>
+            </div>
+            <button class="btn-reset" onclick="resetFilters()">Limpar</button>
+        </div>
+    </header>
+
+    <!-- KPIs -->
+    <section class="kpi-row">
+        <div class="kpi-card green">
+            <div class="kpi-label">Total Caixas</div>
+            <div class="kpi-value" id="kpi-total">258</div>
+            <div class="kpi-sub" id="kpi-total-sub">mai+jun 2026</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Distritos Ativos</div>
+            <div class="kpi-value" id="kpi-distritos">13</div>
+            <div class="kpi-sub">regiões cobertas</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Setores Ativos</div>
+            <div class="kpi-value" id="kpi-setores">45</div>
+            <div class="kpi-sub">representantes</div>
+        </div>
+        <div class="kpi-card orange">
+            <div class="kpi-label">PDVs</div>
+            <div class="kpi-value" id="kpi-pdvs">23</div>
+            <div class="kpi-sub">farmácias/distribuidoras</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Maior Distrito</div>
+            <div class="kpi-value" style="font-size:18px" id="kpi-top-distrito">DIST. 1166</div>
+            <div class="kpi-sub" id="kpi-top-distrito-cx">87 caixas</div>
+        </div>
+    </section>
+
+    <!-- CHARTS ROW 1 -->
+    <section class="chart-row">
+        <div class="chart-container">
+            <h3>Caixas por Distrito</h3>
+            <canvas id="chart-distrito"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Evolução Mensal por Distrito (Top 6)</h3>
+            <canvas id="chart-evolucao"></canvas>
+        </div>
+    </section>
+
+    <!-- CHARTS ROW 2 -->
+    <section class="chart-row">
+        <div class="chart-container">
+            <h3>Top PDVs — Ranking de Caixas</h3>
+            <canvas id="chart-pdv"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Distribuição Mai x Jun</h3>
+            <canvas id="chart-periodo"></canvas>
+        </div>
+    </section>
+
+    <!-- PIVOT TABLE -->
+    <div class="table-section">
+        <h3>Pivot: Distritos × Período</h3>
+        <div id="pivot-container"></div>
+    </div>
+
+    <!-- PDV RANKING TABLE -->
+    <div class="table-section">
+        <h3>Ranking de PDVs</h3>
+        <div id="pdv-table-container"></div>
+    </div>
+
+    <!-- SETOR TABLE -->
+    <div class="table-section">
+        <h3>Detalhe por Setor / Representante</h3>
+        <div id="setor-table-container"></div>
+    </div>
+
+    <footer class="dashboard-footer">
+        OLIRE DASH SQUAD &nbsp;|&nbsp; EMS — Regional SPI &nbsp;|&nbsp; Gerado em 03/06/2026
+    </footer>
+</div>
+
+<script>
+// ─── DADOS EMBARCADOS ──────────────────────────────────────────────────────────
+const DATA = {
+  por_periodo: { "2026-05": 147, "2026-06": 111 },
+  por_distrito: {
+    "DISTRITO 1166": 87, "DISTRITO 1004": 47, "DISTRITO 1106": 42,
+    "DISTRITO 1167": 22, "DISTRITO 1107": 18, "DISTRITO 1064": 15,
+    "DISTRITO 1105": 12, "DISTRITO 9106": 6, "DISTRITO 1101": 3,
+    "DISTRITO 9104": 3, "DISTRITO 1165": 1, "DISTRITO 1103": 1,
+    "DISTRITO 1062": 1
+  },
+  por_pdv: {
+    "FARMACIA PAGUE MENOS": 102, "RAIA DROGASIL": 39, "VENANCIO": 25,
+    "DROGARIA SAO PAULO": 22, "DROGARIA PACHECO": 20, "DROGARIA GLOBO": 17,
+    "DROGARIAS TAMOIO": 5, "DROGARIA ARAUJO": 5, "REDEPHARMA 2": 4,
+    "A NOSSA DROGARIA": 3, "MAIS B FARMA LTDA": 2, "FARMACIA INDIANA": 2,
+    "DROGARIA ROSARIO": 2, "FARMACIA J J CAVALCANTI LTDA": 1,
+    "DROGASMIL": 1, "OCEAN FARMA DROGARIA LTDA": 1, "REDEPHARMA": 1,
+    "FARMACIA SAO JOAO": 1, "PANVEL FARMACIAS": 1, "DROGARIA GARONCI LTDA": 1,
+    "FARMACIA BRITO": 1, "FARMACIAS ASSOCIADAS": 1, "DISTRIBUIDORA TAPAJOS AM": 1
+  },
+  por_setor: {
+    "11660106": { cx: 60, resp: "ROLF TAVARES MATELA", dist: "DISTRITO 1166" },
+    "10040200": { cx: 19, resp: "Leonardo Ferreira", dist: "DISTRITO 1004" },
+    "11660107": { cx: 15, resp: "ROLF TAVARES MATELA", dist: "DISTRITO 1166" },
+    "10040300": { cx: 15, resp: "Mauricio Ismério", dist: "DISTRITO 1004" },
+    "10040100": { cx: 13, resp: "Thais Rosa", dist: "DISTRITO 1004" },
+    "11670204": { cx: 10, resp: "Lais Monica Marques Santos", dist: "DISTRITO 1167" },
+    "11060108": { cx: 10, resp: "VAGO", dist: "DISTRITO 1106" },
+    "10640300": { cx: 9, resp: "Bianca Paraíso", dist: "DISTRITO 1064" },
+    "11060301": { cx: 8, resp: "CAIO RITO", dist: "DISTRITO 1106" },
+    "11060103": { cx: 7, resp: "VAGO", dist: "DISTRITO 1106" },
+    "11050107": { cx: 7, resp: "LARISSA POUBEL", dist: "DISTRITO 1105" },
+    "11070301": { cx: 7, resp: "Adelia Ribeiro de Mello Rebello", dist: "DISTRITO 1107" },
+    "11060106": { cx: 7, resp: "VAGO", dist: "DISTRITO 1106" },
+    "11660202": { cx: 5, resp: "CASSIO ESPIRITO SANTO", dist: "DISTRITO 1166" },
+    "11670309": { cx: 5, resp: "Diego Frota dos Reis", dist: "DISTRITO 1167" },
+    "91060101": { cx: 4, resp: "Antonio Andre Feitosa Isaias", dist: "DISTRITO 9106" },
+    "11070302": { cx: 4, resp: "Adelia Ribeiro de Mello Rebello", dist: "DISTRITO 1107" },
+    "11660110": { cx: 3, resp: "ROLF TAVARES MATELA", dist: "DISTRITO 1166" },
+    "11670302": { cx: 3, resp: "Diego Frota dos Reis", dist: "DISTRITO 1167" },
+    "91040305": { cx: 3, resp: "—", dist: "DISTRITO 9104" },
+    "11050103": { cx: 3, resp: "LARISSA POUBEL", dist: "DISTRITO 1105" },
+    "11660104": { cx: 3, resp: "ROLF TAVARES MATELA", dist: "DISTRITO 1166" },
+    "11010101": { cx: 2, resp: "TAMIRES LOPES", dist: "DISTRITO 1101" },
+    "11070304": { cx: 2, resp: "Adelia Ribeiro de Mello Rebello", dist: "DISTRITO 1107" },
+    "11070305": { cx: 2, resp: "Adelia Ribeiro de Mello Rebello", dist: "DISTRITO 1107" },
+    "11670201": { cx: 2, resp: "Lais Monica Marques Santos", dist: "DISTRITO 1167" },
+    "11670202": { cx: 2, resp: "Lais Monica Marques Santos", dist: "DISTRITO 1167" },
+    "91060103": { cx: 2, resp: "Antonio Andre Feitosa Isaias", dist: "DISTRITO 9106" },
+    "11070303": { cx: 2, resp: "Adelia Ribeiro de Mello Rebello", dist: "DISTRITO 1107" },
+    "11060302": { cx: 2, resp: "CAIO RITO", dist: "DISTRITO 1106" },
+    "10640100": { cx: 6, resp: "Simone Lopes Teixeira", dist: "DISTRITO 1064" },
+    "11060107": { cx: 3, resp: "VAGO", dist: "DISTRITO 1106" },
+    "11060204": { cx: 1, resp: "LUCAS BARBOSA DE SOUZA", dist: "DISTRITO 1106" },
+    "11050201": { cx: 1, resp: "Carla Patricia de Melo Ziviani", dist: "DISTRITO 1105" },
+    "11650104": { cx: 1, resp: "Julio Cesar dos Santos Oliveira", dist: "DISTRITO 1165" },
+    "11050102": { cx: 1, resp: "LARISSA POUBEL", dist: "DISTRITO 1105" },
+    "11030204": { cx: 1, resp: "Murillo Santos", dist: "DISTRITO 1103" },
+    "11070307": { cx: 1, resp: "Adelia Ribeiro de Mello Rebello", dist: "DISTRITO 1107" },
+    "11060205": { cx: 1, resp: "LUCAS BARBOSA DE SOUZA", dist: "DISTRITO 1106" },
+    "11060101": { cx: 1, resp: "VAGO", dist: "DISTRITO 1106" },
+    "11010104": { cx: 1, resp: "TAMIRES LOPES", dist: "DISTRITO 1101" },
+    "11060308": { cx: 1, resp: "CAIO RITO", dist: "DISTRITO 1106" },
+    "11660102": { cx: 1, resp: "ROLF TAVARES MATELA", dist: "DISTRITO 1166" },
+    "10620304": { cx: 1, resp: "Cristina Bessa Gama Bayeux", dist: "DISTRITO 1062" },
+    "11060306": { cx: 1, resp: "CAIO RITO", dist: "DISTRITO 1106" }
+  },
+  periodo_x_distrito: {
+    "2026-05": {
+      "DISTRITO 1166": 70, "DISTRITO 1004": 21, "DISTRITO 1106": 28,
+      "DISTRITO 1167": 6,  "DISTRITO 1107": 10, "DISTRITO 1064": 7,
+      "DISTRITO 1105": 1,  "DISTRITO 9106": 2,  "DISTRITO 1101": 1,
+      "DISTRITO 1062": 1,  "DISTRITO 9104": 0,  "DISTRITO 1165": 0, "DISTRITO 1103": 0
+    },
+    "2026-06": {
+      "DISTRITO 1166": 17, "DISTRITO 1004": 26, "DISTRITO 1106": 14,
+      "DISTRITO 1167": 16, "DISTRITO 1107": 8,  "DISTRITO 1064": 8,
+      "DISTRITO 1105": 11, "DISTRITO 9106": 4,  "DISTRITO 1101": 2,
+      "DISTRITO 1062": 0,  "DISTRITO 9104": 3,  "DISTRITO 1165": 1, "DISTRITO 1103": 1
+    }
+  }
+};
+
+const COLORS = ['#003366','#0066cc','#00a86b','#f6ad55','#e53e3e','#805ad5','#2b6cb0','#276749','#c05621','#553c9a','#2c7a7b','#97266d','#285e61'];
+
+// ─── ESTADO ────────────────────────────────────────────────────────────────────
+let filterPeriodo = 'all';
+let filterDistrito = 'all';
+let charts = {};
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+window.onload = () => {
+    populateDistritoFilter();
+    renderAll();
+};
+
+function populateDistritoFilter() {
+    const sel = document.getElementById('filter-distrito');
+    Object.keys(DATA.por_distrito).sort().forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.textContent = d.replace('DISTRITO ', 'Dist. ');
+        sel.appendChild(opt);
+    });
+}
+
+function applyFilters() {
+    filterPeriodo = document.getElementById('filter-periodo').value;
+    filterDistrito = document.getElementById('filter-distrito').value;
+    renderAll();
+}
+
+function resetFilters() {
+    document.getElementById('filter-periodo').value = 'all';
+    document.getElementById('filter-distrito').value = 'all';
+    filterPeriodo = 'all';
+    filterDistrito = 'all';
+    renderAll();
+}
+
+// ─── COMPUTED DATA ─────────────────────────────────────────────────────────────
+function getDistritoData() {
+    const distritos = Object.keys(DATA.por_distrito);
+    return distritos.map(d => {
+        let cx = 0;
+        if (filterPeriodo === 'all') {
+            cx = DATA.por_distrito[d];
+        } else {
+            cx = (DATA.periodo_x_distrito[filterPeriodo] || {})[d] || 0;
+        }
+        return { name: d, cx };
+    }).filter(d => filterDistrito === 'all' || d.name === filterDistrito)
+      .sort((a, b) => b.cx - a.cx);
+}
+
+function getPdvData() {
+    return Object.entries(DATA.por_pdv)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+}
+
+function getSetorData() {
+    return Object.entries(DATA.por_setor)
+        .filter(([, v]) => filterDistrito === 'all' || v.dist === filterDistrito)
+        .sort((a, b) => b[1].cx - a[1].cx);
+}
+
+function getTotais() {
+    const distData = getDistritoData();
+    const total = distData.reduce((s, d) => s + d.cx, 0);
+    const nDistritos = distData.filter(d => d.cx > 0).length;
+    const setores = getSetorData();
+    const nSetores = setores.filter(([, v]) => v.cx > 0).length;
+    const top = distData[0] || { name: '—', cx: 0 };
+    return { total, nDistritos, nSetores, top };
+}
+
+// ─── RENDER ALL ───────────────────────────────────────────────────────────────
+function renderAll() {
+    renderKPIs();
+    renderChartDistrito();
+    renderChartEvolucao();
+    renderChartPdv();
+    renderChartPeriodo();
+    renderPivot();
+    renderPdvTable();
+    renderSetorTable();
+}
+
+// ─── KPIs ─────────────────────────────────────────────────────────────────────
+function renderKPIs() {
+    const { total, nDistritos, nSetores, top } = getTotais();
+    document.getElementById('kpi-total').textContent = total;
+    document.getElementById('kpi-total-sub').textContent =
+        filterPeriodo === 'all' ? 'mai+jun 2026' : (filterPeriodo === '2026-05' ? 'mai/2026' : 'jun/2026');
+    document.getElementById('kpi-distritos').textContent = nDistritos;
+    document.getElementById('kpi-setores').textContent = nSetores;
+    document.getElementById('kpi-top-distrito').textContent = top.name.replace('DISTRITO ', 'DIST. ');
+    document.getElementById('kpi-top-distrito-cx').textContent = top.cx + ' caixas';
+}
+
+// ─── CHART: DISTRITO ─────────────────────────────────────────────────────────
+function renderChartDistrito() {
+    const data = getDistritoData().filter(d => d.cx > 0);
+    const labels = data.map(d => d.name.replace('DISTRITO ', 'Dist. '));
+    const values = data.map(d => d.cx);
+
+    if (charts['distrito']) { charts['distrito'].destroy(); }
+    const ctx = document.getElementById('chart-distrito').getContext('2d');
+    charts['distrito'] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{ label: 'Caixas', data: values,
+                backgroundColor: COLORS.map(c => c + 'cc'),
+                borderColor: COLORS, borderWidth: 1, borderRadius: 4 }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true, grid: { display: true } }, y: { grid: { display: false } } }
+        }
+    });
+}
+
+// ─── CHART: EVOLUCAO MENSAL ───────────────────────────────────────────────────
+function renderChartEvolucao() {
+    const allDistritos = Object.entries(DATA.por_distrito)
+        .sort((a, b) => b[1] - a[1]).slice(0, 6).map(d => d[0]);
+
+    const periodos = ['2026-05', '2026-06'];
+    const datasets = allDistritos.map((d, i) => ({
+        label: d.replace('DISTRITO ', 'Dist. '),
+        data: periodos.map(p => (DATA.periodo_x_distrito[p] || {})[d] || 0),
+        borderColor: COLORS[i % COLORS.length],
+        backgroundColor: COLORS[i % COLORS.length] + '22',
+        borderWidth: 2, fill: false, tension: 0.3, pointRadius: 5
+    }));
+
+    if (charts['evolucao']) { charts['evolucao'].destroy(); }
+    const ctx = document.getElementById('chart-evolucao').getContext('2d');
+    charts['evolucao'] = new Chart(ctx, {
+        type: 'line',
+        data: { labels: ['Mai/2026', 'Jun/2026'], datasets },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'right', labels: { usePointStyle: true, font: { size: 11 } } } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+}
+
+// ─── CHART: PDV ───────────────────────────────────────────────────────────────
+function renderChartPdv() {
+    const data = getPdvData();
+    const labels = data.map(([k]) => k.length > 20 ? k.slice(0,18)+'…' : k);
+    const values = data.map(([, v]) => v);
+
+    if (charts['pdv']) { charts['pdv'].destroy(); }
+    const ctx = document.getElementById('chart-pdv').getContext('2d');
+    charts['pdv'] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{ label: 'Caixas', data: values,
+                backgroundColor: '#0066cccc', borderColor: '#0066cc', borderWidth: 1, borderRadius: 4 }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true }, y: { grid: { display: false } } }
+        }
+    });
+}
+
+// ─── CHART: PERIODO ───────────────────────────────────────────────────────────
+function renderChartPeriodo() {
+    if (charts['periodo']) { charts['periodo'].destroy(); }
+    const ctx = document.getElementById('chart-periodo').getContext('2d');
+    charts['periodo'] = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Mai/2026', 'Jun/2026'],
+            datasets: [{ data: [147, 111],
+                backgroundColor: ['#003366cc', '#00a86bcc'],
+                borderColor: ['#003366', '#00a86b'], borderWidth: 2 }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, cutout: '60%',
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.parsed} cx (${((ctx.parsed/258)*100).toFixed(1)}%)` } }
+            }
+        }
+    });
+}
+
+// ─── PIVOT TABLE ──────────────────────────────────────────────────────────────
+function renderPivot() {
+    const distritos = Object.keys(DATA.por_distrito).sort((a,b) => DATA.por_distrito[b] - DATA.por_distrito[a]);
+    const periodos = ['2026-05', '2026-06'];
+    const filtered = filterDistrito === 'all' ? distritos : [filterDistrito];
+
+    let totMai = 0, totJun = 0, totGeral = 0;
+
+    let html = `<table class="pivot-table"><thead><tr>
+        <th>Distrito</th><th>Mai/2026</th><th>Jun/2026</th><th>TOTAL</th>
+    </tr></thead><tbody>`;
+
+    filtered.forEach(d => {
+        const mai = (DATA.periodo_x_distrito['2026-05'] || {})[d] || 0;
+        const jun = (DATA.periodo_x_distrito['2026-06'] || {})[d] || 0;
+        const tot = mai + jun;
+        if (filterPeriodo !== 'all') {
+            const val = filterPeriodo === '2026-05' ? mai : jun;
+            if (val === 0) return;
+        }
+        totMai += mai; totJun += jun; totGeral += tot;
+        const maxVal = Math.max(...filtered.map(x => {
+            const m = (DATA.periodo_x_distrito['2026-05'] || {})[x] || 0;
+            const j = (DATA.periodo_x_distrito['2026-06'] || {})[x] || 0;
+            return m + j;
+        }), 1);
+        const barW = Math.round((tot / maxVal) * 80);
+        html += `<tr>
+            <td>${d}</td>
+            <td>${mai > 0 ? `<span class="badge badge-blue">${mai}</span>` : '—'}</td>
+            <td>${jun > 0 ? `<span class="badge badge-green">${jun}</span>` : '—'}</td>
+            <td><div class="bar-cell"><div class="bar-fill" style="width:${barW}px"></div><strong>${tot}</strong></div></td>
+        </tr>`;
+    });
+
+    html += `</tbody><tfoot><tr>
+        <td>TOTAL GERAL</td>
+        <td>${totMai}</td><td>${totJun}</td><td><strong>${totGeral}</strong></td>
+    </tr></tfoot></table>`;
+
+    document.getElementById('pivot-container').innerHTML = html;
+}
+
+// ─── PDV TABLE ────────────────────────────────────────────────────────────────
+function renderPdvTable() {
+    const data = getPdvData();
+    const max = data[0]?.[1] || 1;
+    let html = `<table class="data-table"><thead><tr>
+        <th>#</th><th>PDV / Farmácia</th><th>Caixas</th><th>Participação</th>
+    </tr></thead><tbody>`;
+
+    data.forEach(([nome, cx], i) => {
+        const pct = ((cx / 258) * 100).toFixed(1);
+        const barW = Math.round((cx / max) * 100);
+        const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-num';
+        html += `<tr>
+            <td><span class="${rankClass}">${i + 1}º</span></td>
+            <td>${nome}</td>
+            <td><strong>${cx}</strong></td>
+            <td><div class="bar-cell">
+                <div class="bar-fill" style="width:${barW}px;background:#0066cc"></div>
+                <span style="font-size:12px;color:#718096">${pct}%</span>
+            </div></td>
+        </tr>`;
+    });
+
+    html += '</tbody></table>';
+    document.getElementById('pdv-table-container').innerHTML = html;
+}
+
+// ─── SETOR TABLE ──────────────────────────────────────────────────────────────
+function renderSetorTable() {
+    const data = getSetorData();
+    let html = `<table class="data-table"><thead><tr>
+        <th onclick="sortSetorTable('setor')">Setor ↕</th>
+        <th onclick="sortSetorTable('dist')">Distrito ↕</th>
+        <th onclick="sortSetorTable('resp')">Representante ↕</th>
+        <th onclick="sortSetorTable('cx')">Caixas ↕</th>
+    </tr></thead><tbody>`;
+
+    data.forEach(([setor, v]) => {
+        html += `<tr>
+            <td><code>${setor}</code></td>
+            <td>${v.dist.replace('DISTRITO ', 'Dist. ')}</td>
+            <td>${v.resp || '—'}</td>
+            <td><span class="badge badge-blue">${v.cx}</span></td>
+        </tr>`;
+    });
+
+    html += '</tbody></table>';
+    document.getElementById('setor-table-container').innerHTML = html;
+}
+
+let setorSortCol = 'cx', setorSortDir = -1;
+function sortSetorTable(col) {
+    if (setorSortCol === col) setorSortDir *= -1;
+    else { setorSortCol = col; setorSortDir = -1; }
+    renderSetorTable();
+}
+
+function getSetorData() {
+    let entries = Object.entries(DATA.por_setor)
+        .filter(([, v]) => filterDistrito === 'all' || v.dist === filterDistrito);
+    entries.sort((a, b) => {
+        let av, bv;
+        if (setorSortCol === 'cx') { av = a[1].cx; bv = b[1].cx; }
+        else if (setorSortCol === 'dist') { av = a[1].dist; bv = b[1].dist; }
+        else if (setorSortCol === 'resp') { av = a[1].resp; bv = b[1].resp; }
+        else { av = a[0]; bv = b[0]; }
+        return av < bv ? setorSortDir : av > bv ? -setorSortDir : 0;
+    });
+    return entries;
+}
+</script>
+</body>
+</html>
