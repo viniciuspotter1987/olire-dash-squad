@@ -175,9 +175,40 @@ for setor, mes_dict in conv_setor.items():
 
 # ── Distribuicoes ─────────────────────────────────────────────────────────────
 C04_DIST_UGN = {'LESTE':5000,'NE':8000,'APOLO RJ':4553,'CO NO':7000,'SPI OESTE':7000,'SUL':6898,'APOLO SP':11000}
-C05_DIST_UGN = {'LESTE':6857,'NE':8077,'APOLO RJ':5769,'CO NO':6923,'SPI OESTE':6923,'SUL':6923,'APOLO SP':9231}
 C04_DIST_LINHA = {'NEXUS':23645,'VITAL':25806,'IDENTIDADE':0}
-C05_DIST_LINHA = {'NEXUS':25000,'VITAL':25000,'IDENTIDADE':6000}
+
+# ── C05 distribuição — lida do racional oficial C05_racional.xlsx ─────────────
+_c05_sheet_ugn = {'SPI':'SPI OESTE','SPC':'APOLO SP','LESTE':'LESTE','CONO':'CO NO',
+                  'NE':'NE','SUL':'SUL','RJ':'APOLO RJ'}
+_xl_c05 = pd.ExcelFile('inputs/C05_racional.xlsx')
+
+# Cupons por setor (cada linha = 1 cupom)
+setor_c05_dist = defaultdict(int)
+C05_DIST_UGN = {}
+for _sheet, _ugn in _c05_sheet_ugn.items():
+    _df = pd.read_excel(_xl_c05, sheet_name=_sheet, header=1, usecols=[2])
+    _df.columns = ['cd_setor']
+    _df = _df[_df['cd_setor'].notna() & (_df['cd_setor'] != 'cd_setor')]
+    _df['cd_setor'] = _df['cd_setor'].astype(str).str.strip()
+    for _s in _df['cd_setor']:
+        setor_c05_dist[_s] += 1
+    C05_DIST_UGN[_ugn] = len(_df)
+
+# IDENTIDADE BR
+_df_id = pd.read_excel(_xl_c05, sheet_name='IDENTIDADE BR', header=1, usecols=[2])
+_df_id.columns = ['cd_setor']
+_df_id = _df_id[_df_id['cd_setor'].notna() & (_df_id['cd_setor'] != 'cd_setor')]
+_df_id['cd_setor'] = _df_id['cd_setor'].astype(str).str.strip()
+for _s in _df_id['cd_setor']:
+    setor_c05_dist[_s] += 1
+
+# Totais por linha a partir do mapeamento de setores
+_c05_linha = defaultdict(int)
+for _s, _cx in setor_c05_dist.items():
+    _info = lookup_setor(_s)
+    if _info:
+        _c05_linha[_info['linha']] += _cx
+C05_DIST_LINHA = {'NEXUS': _c05_linha['NEXUS'], 'VITAL': _c05_linha['VITAL'], 'IDENTIDADE': 6000}
 
 UGN_ORDER = ['SPI OESTE','LESTE','NE','CO NO','APOLO RJ','SUL','APOLO SP']
 
@@ -203,7 +234,7 @@ for ugn in UGN_ORDER:
             out.append({
                 'cd': cd, 'nome': s['nome_setor'],
                 'dist': s['cd_distrito'],
-                'c04d': s['dist_c04'], 'c05d': s['dist_c05'],
+                'c04d': s['dist_c04'], 'c05d': setor_c05_dist.get(cd, 0),
                 'abril': mc.get(4,0), 'maio': mc.get(5,0), 'junho': mc.get(6,0),
                 'pdvs': get_pdvs(cd)
             })
