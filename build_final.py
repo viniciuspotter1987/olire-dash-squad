@@ -571,41 +571,85 @@ h('''      </tbody>
 </div>''')
 
 # ── PAGE 5: EVOLUÇÃO ──────────────────────────────────────────────────────────
-UGN_DELTA = [(r['ugn'],
-              r['abril']/(r['c04d'] or 1)*100 if r['c04d'] else 0,
-              r['totc']/r['totd']*100 if r['totd'] else 0)
-             for r in sorted(ugn_ranking, key=lambda x: -x['pct'])]
+# % acumulada mês a mês por UGN (Abril, Abril+Maio, Abril+Maio+Junho)
+evol_rows = []
+for r in sorted(ugn_ranking, key=lambda x: -x['pct']):
+    td = r['totd']
+    p1 = round(r['abril']/td*100, 1) if td else 0
+    p2 = round((r['abril']+r['maio'])/td*100, 1) if td else 0
+    p3 = round(r['totc']/td*100, 1) if td else 0
+    evol_rows.append({'ugn': r['ugn'], 'dist': td,
+                      'abril': r['abril'], 'maio': r['maio'], 'junho': r['junho'], 'tot': r['totc'],
+                      'p1': p1, 'p2': p2, 'p3': p3})
+
+# totais nacionais acumulados (só Nexus+Vital para %)
+tot_nv_d = TOT_nv_d
+p_nac_1 = round(TOT_abril/tot_nv_d*100,1) if tot_nv_d else 0
+p_nac_2 = round((TOT_abril+TOT_maio)/tot_nv_d*100,1) if tot_nv_d else 0
+p_nac_3 = round((TOT_abril+TOT_maio+TOT_junho)/tot_nv_d*100,1) if tot_nv_d else 0
+
+evol_js = json.dumps(evol_rows, ensure_ascii=False)
 
 h('<div id="page-evolucao" class="page">')
-h('''<p style="font-size:13px;color:var(--txt2);margin-bottom:1rem">Conversões por ciclo e mês · C04 Abril → C05 Maio → C05 Junho</p>
+h(f'''<p style="font-size:13px;color:var(--txt2);margin-bottom:1rem">Evolução mês a mês · caixas convertidas e % acumulada sobre total distribuído</p>
   <div class="two" style="margin-bottom:1rem">
     <div class="card">
       <div class="card-title"><i class="ti ti-chart-bar"></i> Caixas convertidas por mês</div>
       <div class="chart-wrap"><canvas id="chartMes"></canvas></div>
     </div>
     <div class="card">
-      <div class="card-title"><i class="ti ti-trending-up"></i> % C04 Abril vs % Total por UGN</div>
-      <table style="font-size:12px">
-        <thead><tr><th>UGN</th><th>% C04</th><th>% Total</th><th>Δ</th></tr></thead>
-        <tbody>''')
-
-for ugn, p4, ptot in UGN_DELTA:
-    delta = round(ptot - p4, 1)
-    ds = (f'+{delta:.1f}pp' if delta >= 0 else f'{delta:.1f}pp').replace('.', ',')
-    dc = 'var(--nexus)' if delta >= 0 else 'var(--vital)'
-    h(f'          <tr><td>{ugn}</td><td>{p4:.1f}%'.replace('.',',')+f'</td><td>{ptot:.1f}%'.replace('.',',')+f'</td><td style="color:{dc}">{ds}</td></tr>')
-
-h(f'''        </tbody>
-      </table>
+      <div class="card-title"><i class="ti ti-trending-up"></i> % Conversão acumulada por mês · por UGN</div>
+      <div class="chart-wrap"><canvas id="chartEvol"></canvas></div>
     </div>
   </div>
   <div class="card">
-    <div class="card-title"><i class="ti ti-chart-bar"></i> Comparativo % conversão por UGN</div>
-    <div class="chart-wrap"><canvas id="chartUGN"></canvas></div>
+    <div class="card-title"><i class="ti ti-table"></i> Evolução mês a mês por UGN</div>
+    <div class="tw"><table>
+      <thead>
+        <tr>
+          <th>UGN</th>
+          <th>Dist. Total</th>
+          <th>Abril cx</th><th>% Abril</th>
+          <th>Maio cx</th><th>% Ac. Maio</th>
+          <th>Junho cx</th><th>% Ac. Junho</th>
+          <th>Total cx</th>
+        </tr>
+      </thead>
+      <tbody>''')
+
+best_p3 = max(r['p3'] for r in evol_rows) if evol_rows else 1
+for r in evol_rows:
+    bw = int(r['p3']/best_p3*90) if best_p3 else 0
+    p1s = f'{r["p1"]:.1f}'.replace('.',',')+'%'
+    p2s = f'{r["p2"]:.1f}'.replace('.',',')+'%'
+    p3s = f'{r["p3"]:.1f}'.replace('.',',')+'%'
+    h(f'''        <tr>
+          <td><strong>{r["ugn"]}</strong></td>
+          <td>{fmt_br(r["dist"])}</td>
+          <td>{fmt_br(r["abril"])}</td><td style="color:var(--ems-blue)">{p1s}</td>
+          <td>{fmt_br(r["maio"])}</td><td style="color:var(--ems-blue)">{p2s}</td>
+          <td>{fmt_br(r["junho"])}</td><td style="color:var(--ems-blue)">{p3s}</td>
+          <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:{bw}%"></div></div><span class="bar-pct"><strong>{fmt_br(r["tot"])}</strong></span></div></td>
+        </tr>''')
+
+p_nac_1s = f'{p_nac_1:.1f}'.replace('.',',')+'%'
+p_nac_2s = f'{p_nac_2:.1f}'.replace('.',',')+'%'
+p_nac_3s = f'{p_nac_3:.1f}'.replace('.',',')+'%'
+h(f'''        <tr style="font-weight:700;border-top:2px solid var(--border);background:var(--bg2)">
+          <td>TOTAL NACIONAL</td>
+          <td>{fmt_br(TOT_c04d+TOT_c05d)}</td>
+          <td>{fmt_br(TOT_abril)}</td><td style="color:var(--ems-blue)">{p_nac_1s}</td>
+          <td>{fmt_br(TOT_maio)}</td><td style="color:var(--ems-blue)">{p_nac_2s}</td>
+          <td>{fmt_br(TOT_junho)}</td><td style="color:var(--ems-blue)">{p_nac_3s}</td>
+          <td><strong>{fmt_br(TOT_conv)}</strong></td>
+        </tr>''')
+
+h(f'''      </tbody>
+    </table></div>
   </div>
 </div>
 </div><!-- /container -->
-''')
+<script>const EVOL_DATA = {evol_js};</script>''')
 
 # ── SCRIPTS ───────────────────────────────────────────────────────────────────
 # Compute chart data from aggregations
@@ -613,10 +657,7 @@ nexus_mes = [linha_conv['NEXUS'].get(m,0) for m in MESES]
 vital_mes  = [linha_conv['VITAL'].get(m,0) for m in MESES]
 id_mes     = [linha_conv['IDENTIDADE'].get(m,0) for m in MESES]
 
-ugn_pcts_abril = [r['abril']/(r['c04d'] or 1)*100 if r['c04d'] else 0 for r in ugn_ranking]
-ugn_pcts_tot   = [r['totc']/r['totd']*100 if r['totd'] else 0 for r in ugn_ranking]
-ugn_labels     = [r['ugn'] for r in ugn_ranking]
-media_nac      = round(TOT_conv/tot_nv_d*100, 1) if tot_nv_d else 0
+media_nac = round(TOT_conv/TOT_nv_d*100, 1) if TOT_nv_d else 0
 
 h(f'<script>')
 h(f'const UGN_DATA = {ugn_js_str};')
@@ -627,11 +668,6 @@ const CHART_MES = {{
   nexus: {nexus_mes},
   vital: {vital_mes},
   id: {id_mes}
-}};
-const UGN_PCTS = {{
-  labels: {json.dumps(ugn_labels)},
-  abril: {ugn_pcts_abril},
-  total: {ugn_pcts_tot}
 }};
 const MEDIA_NAC = {media_nac};
 ''')
@@ -812,34 +848,34 @@ function initCharts() {
     }
   });
 
-  const ctx2 = document.getElementById('chartUGN').getContext('2d');
+  const ctx2 = document.getElementById('chartEvol').getContext('2d');
+  const COLORS_UGN = ['#003087','#1B5E20','#B71C1C','#E65100','#6A1B9A','#00695C','#4E342E'];
   new Chart(ctx2, {
-    type: 'bar',
+    type: 'line',
     data: {
-      labels: UGN_PCTS.labels,
-      datasets: [
-        {label:'% C04 Abril', data:UGN_PCTS.abril, backgroundColor:'rgba(0,48,135,0.4)', borderColor:'#003087', borderWidth:1},
-        {label:'% Total', data:UGN_PCTS.total, backgroundColor:'rgba(0,48,135,0.85)', borderColor:'#003087', borderWidth:1},
-      ]
+      labels: ['Abril','Ac. Maio','Ac. Junho'],
+      datasets: EVOL_DATA.map((r,i) => ({
+        label: r.ugn,
+        data: [r.p1, r.p2, r.p3],
+        borderColor: COLORS_UGN[i % COLORS_UGN.length],
+        backgroundColor: COLORS_UGN[i % COLORS_UGN.length] + '18',
+        borderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        tension: 0.3,
+        fill: false
+      }))
     },
     options: {
-      responsive:true, maintainAspectRatio:false,
+      responsive: true, maintainAspectRatio: false,
+      interaction: {mode:'index', intersect:false},
       plugins:{
-        legend:{position:'top',labels:{usePointStyle:true,padding:16}},
+        legend:{position:'top', labels:{usePointStyle:true, padding:12, font:{size:11}}},
         tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1).replace('.',',')}%`}}
       },
       scales:{
         x:{grid:{display:false}},
-        y:{beginAtZero:true, ticks:{callback:v=>v.toFixed(1).replace('.',',')+"%"},
-          afterDraw(chart){
-            const yS=chart.scales.y, xS=chart.scales.x, y=yS.getPixelForValue(MEDIA_NAC), ctx=chart.ctx;
-            ctx.save(); ctx.setLineDash([5,4]); ctx.strokeStyle='#B71C1C'; ctx.lineWidth=1.5;
-            ctx.beginPath(); ctx.moveTo(xS.left,y); ctx.lineTo(xS.right,y); ctx.stroke();
-            ctx.fillStyle='#B71C1C'; ctx.font='10px sans-serif';
-            ctx.fillText(`Média ${MEDIA_NAC.toFixed(1).replace('.',',')}%`, xS.left+4, y-4);
-            ctx.restore();
-          }
-        }
+        y:{beginAtZero:true, ticks:{callback:v=>v.toFixed(1).replace('.',',')+"%"}}
       }
     }
   });
