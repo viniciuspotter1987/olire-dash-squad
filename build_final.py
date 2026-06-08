@@ -1,8 +1,8 @@
 """
-build_final.py v6 — Gera outputs/index.html
-  - Junho lido de inputs/Cupons Jun.xlsx (fonte oficial)
-  - Abril/Maio de C04.xlsx (meses 4 e 5)
-  - Maio adicional de C05.xlsx
+build_final.py v7 — Gera outputs/index.html
+  - Abril  lido de C04.xlsx (mês 4 apenas)
+  - Maio   lido de inputs/Cupons Maio.xlsx (fonte oficial)
+  - Junho  lido de inputs/Cupons Jun.xlsx  (fonte oficial)
   - Mapeamento por setor e por distrito
 """
 import json, openpyxl, zipfile, zlib, re, os, datetime
@@ -91,10 +91,19 @@ def xl_month_dt(v):
     if hasattr(v, 'month'): return v.month
     return None
 
+# ── Ler Cupons Maio.xlsx (fonte oficial Maio) ─────────────────────────────────
+df_maio = pd.read_excel('inputs/Cupons Maio.xlsx', header=0)
+df_maio.columns = ['Setor','Resp','SetorFull','Cartao','Apresentacao','Desconto','CNPJ','NomePDV','Data','Hora','QtdCx']
+df_maio['Setor'] = df_maio['Setor'].astype(str).str.strip()
+df_maio['QtdCx'] = pd.to_numeric(df_maio['QtdCx'], errors='coerce')
+df_maio = df_maio[df_maio['QtdCx'].notna() & (df_maio['QtdCx'] > 0)
+                  & (~df_maio['Setor'].isin(['Setor','Total','nan','None']))]
+
 # ── Ler Cupons Jun.xlsx (fonte oficial Junho) ─────────────────────────────────
 df_jun = pd.read_excel('inputs/Cupons Jun.xlsx', header=0)
 df_jun.columns = ['Setor','Resp','SetorFull','Cartao','Apresentacao','Desconto','CNPJ','NomePDV','Data','Hora','QtdCx']
 df_jun['Setor'] = df_jun['Setor'].astype(str).str.strip()
+df_jun['QtdCx'] = pd.to_numeric(df_jun['QtdCx'], errors='coerce')
 df_jun = df_jun[df_jun['QtdCx'].notna() & (df_jun['QtdCx'] > 0)
                 & (~df_jun['Setor'].isin(['Setor','Total','nan','None']))]
 
@@ -102,38 +111,42 @@ df_jun = df_jun[df_jun['QtdCx'].notna() & (df_jun['QtdCx'] > 0)
 conv_setor = defaultdict(lambda: defaultdict(int))   # conv[setor][mes] = cx
 pdv_setor  = defaultdict(lambda: defaultdict(lambda: {'cx': 0, 'cnpj': ''}))
 
-# C04.xlsx: Abril (4) e Maio (5) apenas — Junho vem de jun.xlsx
+# C04.xlsx: Abril (4) apenas — Maio vem de maio.xlsx, Junho de jun.xlsx
 for r in good4:
     setor = str(r[0])
     month = xl_month_dt(r[8])
     cx = int(r[10])
     nome = str(r[7]) if r[7] else ''
     cnpj = str(r[6]) if r[6] else ''
-    if not month or month == 6: continue   # ignora mês 6 do C04 (substituído por jun.xlsx)
+    if not month or month != 4: continue   # apenas Abril do C04
     conv_setor[setor][month] += cx
     if nome:
         pdv_setor[setor][nome]['cx'] += cx
         if not pdv_setor[setor][nome]['cnpj']:
             pdv_setor[setor][nome]['cnpj'] = cnpj
 
-# C05.xlsx: Maio (5) apenas
-for r in good5:
-    try: setor = str(int(float(str(r[0]))))
-    except: setor = str(r[0])
-    month = xl_month(r[8])
-    cx = int(float(r[10]))
-    if not month or month == 6: continue
-    conv_setor[setor][month] += cx
+# maio.xlsx: Maio (5) — fonte oficial
+redes_maio = defaultdict(lambda: {'cx': 0, 'cnpjs': set()})
+for _, row in df_maio.iterrows():
+    setor = str(row['Setor'])
+    cx = int(row['QtdCx'])
+    nome = str(row['NomePDV']) if pd.notna(row['NomePDV']) else ''
+    cnpj = str(row['CNPJ']) if pd.notna(row['CNPJ']) else ''
+    conv_setor[setor][5] += cx
+    if nome:
+        pdv_setor[setor][nome]['cx'] += cx
+        if not pdv_setor[setor][nome]['cnpj']:
+            pdv_setor[setor][nome]['cnpj'] = cnpj
+        redes_maio[nome]['cx'] += cx
+        redes_maio[nome]['cnpjs'].add(cnpj)
 
-# jun.xlsx: Junho (6) — fonte oficial, usa lookup_setor (setor + distrito)
+# jun.xlsx: Junho (6) — fonte oficial
 redes_jun = defaultdict(lambda: {'cx': 0, 'cnpjs': set()})
 for _, row in df_jun.iterrows():
     setor = str(row['Setor'])
     cx = int(row['QtdCx'])
     nome = str(row['NomePDV']) if pd.notna(row['NomePDV']) else ''
     cnpj = str(row['CNPJ']) if pd.notna(row['CNPJ']) else ''
-    info = lookup_setor(setor)
-    # Atribui a Junho no setor (se mapeável direto) ou ao distrito
     conv_setor[setor][6] += cx
     if nome:
         pdv_setor[setor][nome]['cx'] += cx
@@ -241,15 +254,26 @@ for ugn in UGN_ORDER:
                         'abril':u['abril'],'maio':u['maio'],'junho':u['junho'],'totc':u['totconv'],'pct':pct})
 ugn_ranking.sort(key=lambda x: -x['pct'])
 
-# Redes (C04 data)
+# Redes — consolida Abril (C04) + Maio (maio.xlsx) + Junho (jun.xlsx)
 redes_data = defaultdict(lambda: {'cx':0,'cnpjs':set()})
+# Abril — C04
 for r in good4:
+    month = xl_month_dt(r[8])
+    if month != 4: continue
     nome = str(r[7]) if r[7] else ''
     cnpj = str(r[6]) if r[6] else ''
     cx = int(r[10])
     if not nome: continue
     redes_data[nome]['cx'] += cx
     redes_data[nome]['cnpjs'].add(cnpj)
+# Maio
+for nm, d in redes_maio.items():
+    redes_data[nm]['cx'] += d['cx']
+    redes_data[nm]['cnpjs'].update(d['cnpjs'])
+# Junho
+for nm, d in redes_jun.items():
+    redes_data[nm]['cx'] += d['cx']
+    redes_data[nm]['cnpjs'].update(d['cnpjs'])
 
 top_redes = sorted(redes_data.items(), key=lambda x: -x[1]['cx'])[:15]
 top_redes_js = [{'nome':nm,'cx':d['cx'],'cnpjs':len(d['cnpjs'])} for nm,d in top_redes]
