@@ -386,7 +386,7 @@ h('''<div class="dash-header">
       <div class="dash-sub">Conversão de Cupons C04 / C05 · Nexus · Vital · Identidade</div>
     </div>
   </div>
-  <div class="dash-badge"><i class="ti ti-refresh" style="font-size:12px"></i> Atualizado: Jun/2026</div>
+  <div class="dash-badge"><i class="ti ti-refresh" style="font-size:12px"></i> Atualizado: {datetime.date.today().strftime("%d/%m/%Y")}</div>
 </div>
 <div class="nav">
   <button class="nav-btn active" onclick="showPage('consolidado',this)"><i class="ti ti-layout-dashboard"></i> Consolidado</button>
