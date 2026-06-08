@@ -1,11 +1,12 @@
 """
-build_final.py v5 — Gera outputs/index.html
-  - Conversões por mes (Abril/Maio/Junho) de C04.xlsx + C05.xlsx
-  - % = TotConv / TotDist (C04+C05)
-  - Setores agrupados por distrito em Por UGN
-  - Ranking UGNs sem cores de linha (só azul)
+build_final.py v6 — Gera outputs/index.html
+  - Junho lido de inputs/Cupons Jun.xlsx (fonte oficial)
+  - Abril/Maio de C04.xlsx (meses 4 e 5)
+  - Maio adicional de C05.xlsx
+  - Mapeamento por setor e por distrito
 """
 import json, openpyxl, zipfile, zlib, re, os, datetime
+import pandas as pd
 from collections import defaultdict
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -28,6 +29,17 @@ for ugn, u in D['por_ugn'].items():
         setor_map[s['cd_setor']] = {
             'ugn': ugn, 'linha': s['linha'], 'cd_distrito': s['cd_distrito']
         }
+
+# distrito → {ugn, linha}  (fallback para codigos de distrito)
+dist_map = {}
+for ugn, u in D['por_ugn'].items():
+    for s in u['setores']:
+        d = s['cd_distrito']
+        if d not in dist_map:
+            dist_map[d] = {'ugn': ugn, 'linha': s['linha']}
+
+def lookup_setor(cd):
+    return setor_map.get(cd) or dist_map.get(cd)
 
 # ── Ler C04.xlsx ──────────────────────────────────────────────────────────────
 wb4 = openpyxl.load_workbook('inputs/Cupons C04.xlsx', read_only=True)
@@ -79,53 +91,73 @@ def xl_month_dt(v):
     if hasattr(v, 'month'): return v.month
     return None
 
-# ── Agregar conversoes por mes / setor ────────────────────────────────────────
-# conv[setor][mes] = cx
-conv_setor = defaultdict(lambda: defaultdict(int))
-# pdv[setor] = {nome: {cx, cnpj}}
-pdv_setor = defaultdict(lambda: defaultdict(lambda: {'cx': 0, 'cnpj': ''}))
+# ── Ler Cupons Jun.xlsx (fonte oficial Junho) ─────────────────────────────────
+df_jun = pd.read_excel('inputs/Cupons Jun.xlsx', header=0)
+df_jun.columns = ['Setor','Resp','SetorFull','Cartao','Apresentacao','Desconto','CNPJ','NomePDV','Data','Hora','QtdCx']
+df_jun['Setor'] = df_jun['Setor'].astype(str).str.strip()
+df_jun = df_jun[df_jun['QtdCx'].notna() & (df_jun['QtdCx'] > 0)
+                & (~df_jun['Setor'].isin(['Setor','Total','nan','None']))]
 
+# ── Agregar conversoes por mes / setor ────────────────────────────────────────
+conv_setor = defaultdict(lambda: defaultdict(int))   # conv[setor][mes] = cx
+pdv_setor  = defaultdict(lambda: defaultdict(lambda: {'cx': 0, 'cnpj': ''}))
+
+# C04.xlsx: Abril (4) e Maio (5) apenas — Junho vem de jun.xlsx
 for r in good4:
     setor = str(r[0])
     month = xl_month_dt(r[8])
     cx = int(r[10])
     nome = str(r[7]) if r[7] else ''
     cnpj = str(r[6]) if r[6] else ''
-    if not month: continue
+    if not month or month == 6: continue   # ignora mês 6 do C04 (substituído por jun.xlsx)
     conv_setor[setor][month] += cx
     if nome:
         pdv_setor[setor][nome]['cx'] += cx
         if not pdv_setor[setor][nome]['cnpj']:
             pdv_setor[setor][nome]['cnpj'] = cnpj
 
+# C05.xlsx: Maio (5) apenas
 for r in good5:
     try: setor = str(int(float(str(r[0]))))
     except: setor = str(r[0])
     month = xl_month(r[8])
     cx = int(float(r[10]))
-    nome = str(r[7]) if r[7] else ''
-    cnpj = str(int(float(str(r[6])))) if r[6] else ''
-    if not month: continue
+    if not month or month == 6: continue
     conv_setor[setor][month] += cx
+
+# jun.xlsx: Junho (6) — fonte oficial, usa lookup_setor (setor + distrito)
+redes_jun = defaultdict(lambda: {'cx': 0, 'cnpjs': set()})
+for _, row in df_jun.iterrows():
+    setor = str(row['Setor'])
+    cx = int(row['QtdCx'])
+    nome = str(row['NomePDV']) if pd.notna(row['NomePDV']) else ''
+    cnpj = str(row['CNPJ']) if pd.notna(row['CNPJ']) else ''
+    info = lookup_setor(setor)
+    # Atribui a Junho no setor (se mapeável direto) ou ao distrito
+    conv_setor[setor][6] += cx
+    if nome:
+        pdv_setor[setor][nome]['cx'] += cx
+        if not pdv_setor[setor][nome]['cnpj']:
+            pdv_setor[setor][nome]['cnpj'] = cnpj
+        redes_jun[nome]['cx'] += cx
+        redes_jun[nome]['cnpjs'].add(cnpj)
 
 # ── Totais por UGN / linha / mes ──────────────────────────────────────────────
 MESES = [4, 5, 6]
 MES_LABEL = {4: 'Abril', 5: 'Maio', 6: 'Junho'}
 
-# ugn_conv[ugn][mes] = cx  /  ugn_linha_conv[ugn][linha][mes] = cx
-ugn_conv = defaultdict(lambda: defaultdict(int))
-ugn_linha_conv = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
-linha_conv = defaultdict(lambda: defaultdict(int))   # linha[mes] = cx
+ugn_conv  = defaultdict(lambda: defaultdict(int))
+linha_conv = defaultdict(lambda: defaultdict(int))
 
 for setor, mes_dict in conv_setor.items():
-    info = setor_map.get(setor, {})
-    ugn = info.get('ugn')
+    info = lookup_setor(setor)
+    if not info: continue
+    ugn   = info.get('ugn')
     linha = info.get('linha')
     if not ugn: continue
     for mes, cx in mes_dict.items():
         ugn_conv[ugn][mes] += cx
         if linha:
-            ugn_linha_conv[ugn][linha][mes] += cx
             linha_conv[linha][mes] += cx
 
 # ── Distribuicoes ─────────────────────────────────────────────────────────────
