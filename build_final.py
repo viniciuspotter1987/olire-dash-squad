@@ -649,7 +649,7 @@ h(f'''      </tbody>
   </div>
 </div>
 </div><!-- /container -->
-<script>const EVOL_DATA = {evol_js};</script>''')
+<script>const EVOL_DATA = {evol_js}; const MEDIA_BR = [{p_nac_1},{p_nac_2},{p_nac_3}];</script>''')
 
 # ── SCRIPTS ───────────────────────────────────────────────────────────────────
 # Compute chart data from aggregations
@@ -854,17 +854,33 @@ function initCharts() {
     type: 'line',
     data: {
       labels: ['Abril','Ac. Maio','Ac. Junho'],
-      datasets: EVOL_DATA.map((r,i) => ({
-        label: r.ugn,
-        data: [r.p1, r.p2, r.p3],
-        borderColor: COLORS_UGN[i % COLORS_UGN.length],
-        backgroundColor: COLORS_UGN[i % COLORS_UGN.length] + '18',
-        borderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        tension: 0.3,
-        fill: false
-      }))
+      datasets: [
+        ...EVOL_DATA.map((r,i) => ({
+          label: r.ugn,
+          data: [r.p1, r.p2, r.p3],
+          borderColor: COLORS_UGN[i % COLORS_UGN.length],
+          backgroundColor: COLORS_UGN[i % COLORS_UGN.length] + '18',
+          borderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          tension: 0.3,
+          fill: false
+        })),
+        {
+          label: 'Média Brasil',
+          data: MEDIA_BR,
+          borderColor: '#F57F17',
+          backgroundColor: '#F57F1730',
+          borderWidth: 3,
+          borderDash: [7, 4],
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointStyle: 'rectRot',
+          tension: 0.3,
+          fill: false,
+          order: -1
+        }
+      ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
