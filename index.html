@@ -161,7 +161,7 @@ tr.detail-hdr td{padding:5px 8px 5px 28px;font-size:11px;font-weight:500;backgro
         <td>2</td>
         <td>43</td>
         <td>45</td>
-        <td class="pct-id">—</td>
+        <td class="pct-id">0,8%</td>
       </tr>
       <tr class="row-total">
         <td><strong>TOTAL</strong></td>
@@ -417,7 +417,7 @@ function renderUGN(ugn) {
       <td>${maioStr}</td>
       <td>${junhoStr}</td>
       <td>${totSStr}</td>
-      <td class="${pctCls}">${linha==='IDENTIDADE'?'<span class="zero">—</span>':pctT}</td>
+      <td class="${pctCls}">${pctT}</td>
     </tr>`;
     if (linha === 'IDENTIDADE') {
       const identNote = totS > 0

@@ -233,7 +233,7 @@ def linha_row(linha):
     maio  = linha_conv[linha].get(5,0)
     junho = linha_conv[linha].get(6,0)
     tot_c = abril+maio+junho
-    pct   = fmt_pct(tot_c, tot_d) if tot_d and linha!='IDENTIDADE' else '—'
+    pct   = fmt_pct(tot_c, tot_d) if tot_d else '—'
     return {'c04d':c04d,'c05d':c05d,'tot_d':tot_d,'abril':abril,'maio':maio,'junho':junho,'tot_c':tot_c,'pct':pct}
 
 LN = {l: linha_row(l) for l in ['NEXUS','VITAL','IDENTIDADE']}
@@ -692,7 +692,7 @@ function renderUGN(ugn) {
       <td>${maioStr}</td>
       <td>${junhoStr}</td>
       <td>${totSStr}</td>
-      <td class="${pctCls}">${linha==='IDENTIDADE'?'<span class="zero">—</span>':pctT}</td>
+      <td class="${pctCls}">${pctT}</td>
     </tr>`;
     if (linha === 'IDENTIDADE') {
       const identNote = totS > 0
