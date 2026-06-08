@@ -424,12 +424,13 @@ function renderUGN(ugn) {
         ? `<i class="ti ti-info-circle"></i> Identidade: ${totS} cx convertidas (% não calculada — excluída do denominador)`
         : `<i class="ti ti-info-circle"></i> Identidade: cupons distribuídos no C05 · sem conversões registradas`;
       rows += `<tr class="detail-row detail-hdr" data-key="${key}"><td></td><td colspan="9" style="color:var(--id);font-size:11px">${identNote}</td></tr>`;
-    } else if (s.pdvs && s.pdvs.length) {
-      rows += `<tr class="detail-row detail-hdr" data-key="${key}"><td></td><td colspan="2" style="color:var(--ems-blue-mid);font-weight:500;font-size:11px">CNPJ</td><td colspan="4">Nome PDV</td><td colspan="3" style="font-weight:500">Caixas (C04)</td></tr>`;
+    }
+    if (s.pdvs && s.pdvs.length) {
+      rows += `<tr class="detail-row detail-hdr" data-key="${key}"><td></td><td colspan="2" style="color:var(--ems-blue-mid);font-weight:500;font-size:11px">CNPJ</td><td colspan="4">Nome PDV</td><td colspan="3" style="font-weight:500">Caixas</td></tr>`;
       s.pdvs.forEach(p => {
         rows += `<tr class="detail-row" data-key="${key}"><td></td><td colspan="2" style="font-size:11px">${p.cnpj}</td><td colspan="4">${p.nome}</td><td colspan="3">${p.cx}</td></tr>`;
       });
-    } else {
+    } else if (linha !== 'IDENTIDADE' || totS > 0) {
       rows += `<tr class="detail-row" data-key="${key}"><td></td><td colspan="9" style="color:var(--txt3);font-size:11px">Sem dados de PDV disponíveis</td></tr>`;
     }
   };
