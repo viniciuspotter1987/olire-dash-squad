@@ -404,19 +404,26 @@ function renderUGN(ugn) {
     const pctT = totD ? (totS/totD*100).toFixed(1).replace('.',',')+' %' : '—';
     const c04dStr = (s.c04d && linha!=='IDENTIDADE') ? s.c04d.toLocaleString('pt-BR') : '<span class="zero">—</span>';
     const c05dStr = s.c05d ? s.c05d.toLocaleString('pt-BR') : '<span class="zero">—</span>';
+    const abrilStr = s.abril ? s.abril : '<span class="zero">—</span>';
+    const maioStr  = s.maio  ? s.maio  : '<span class="zero">—</span>';
+    const junhoStr = s.junho ? s.junho : '<span class="zero">—</span>';
+    const totSStr  = totS    ? totS    : '<span class="zero">—</span>';
     rows += `<tr class="setor-row ${rowCls}" onclick="toggleSetor('${key}')">
       <td><i class="ti ti-chevron-right" id="ico-${key}" style="font-size:12px;color:var(--txt3)"></i></td>
       <td style="font-size:12px">${s.cd} · ${s.nome}</td>
       <td><span class="badge ${badgeCls}">${linha}</span></td>
       <td>${c04dStr}</td><td>${c05dStr}</td>
-      <td>${linha!=='IDENTIDADE'?s.abril:'<span class="zero">—</span>'}</td>
-      <td>${linha!=='IDENTIDADE'?s.maio:'<span class="zero">0</span>'}</td>
-      <td>${linha!=='IDENTIDADE'?s.junho:'<span class="zero">0</span>'}</td>
-      <td>${linha!=='IDENTIDADE'?totS:'<span class="zero">0</span>'}</td>
+      <td>${abrilStr}</td>
+      <td>${maioStr}</td>
+      <td>${junhoStr}</td>
+      <td>${totSStr}</td>
       <td class="${pctCls}">${linha==='IDENTIDADE'?'<span class="zero">—</span>':pctT}</td>
     </tr>`;
     if (linha === 'IDENTIDADE') {
-      rows += `<tr class="detail-row detail-hdr" data-key="${key}"><td></td><td colspan="9" style="color:var(--id);font-size:11px"><i class="ti ti-info-circle"></i> Identidade: cupons distribuídos no C05 · 0 conversões registradas</td></tr>`;
+      const identNote = totS > 0
+        ? `<i class="ti ti-info-circle"></i> Identidade: ${totS} cx convertidas (% não calculada — excluída do denominador)`
+        : `<i class="ti ti-info-circle"></i> Identidade: cupons distribuídos no C05 · sem conversões registradas`;
+      rows += `<tr class="detail-row detail-hdr" data-key="${key}"><td></td><td colspan="9" style="color:var(--id);font-size:11px">${identNote}</td></tr>`;
     } else if (s.pdvs && s.pdvs.length) {
       rows += `<tr class="detail-row detail-hdr" data-key="${key}"><td></td><td colspan="2" style="color:var(--ems-blue-mid);font-weight:500;font-size:11px">CNPJ</td><td colspan="4">Nome PDV</td><td colspan="3" style="font-weight:500">Caixas (C04)</td></tr>`;
       s.pdvs.forEach(p => {
